@@ -94,7 +94,7 @@
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       opacity: 0;
-      animation: visnetFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: visnetFadeIn 0.4s ease forwards;
     }
 
     .visnet-container:fullscreen,
@@ -209,26 +209,6 @@
     }
     .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
 
-    .visnet-fs-instruction {
-      position: absolute;
-      top: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #fff;
-      background: rgba(30, 58, 138, 0.92);
-      padding: 11px 22px;
-      border-radius: 999px;
-      display: none;
-      z-index: 10000;
-      pointer-events: none;
-      font-weight: 500;
-      font-size: 13.5px;
-      letter-spacing: 0.01em;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
-      backdrop-filter: blur(8px);
-      transition: opacity 0.4s ease;
-    }
-
     .visnet-loading-spinner {
       position: absolute;
       top: 50%;
@@ -245,7 +225,6 @@
       font-size: 14px;
       letter-spacing: 0.01em;
       border: 1px solid var(--border);
-      animation: visnet-pulse 2.2s ease-in-out infinite;
     }
 
     .visnet-error-text { color: #dc2626; font-weight: 600; }
@@ -265,7 +244,7 @@
       backdrop-filter: blur(6px);
       border: 1px solid var(--border);
       min-width: 150px;
-      max-height: 55vh;
+      max-height: 52vh;
       overflow-y: auto;
     }
 
@@ -303,20 +282,9 @@
       color: #64748b;
     }
 
-    @keyframes visnet-pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0.18); }
-      70%  { box-shadow: 0 0 0 10px rgba(26, 86, 219, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0); }
-    }
-
     @keyframes visnetFadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .visnet-container { animation: none; opacity: 1; }
-      .visnet-loading-spinner { animation: none; }
     }
 
     @media (max-width: 900px) {
@@ -346,13 +314,13 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a link</strong> to illuminate the connected nodes and all other nodes that share them. Click a node to view its immediate circle, or click empty space to reset.</p>
+    <p>Interactive network of artists, venues, and creative practices across Westmeath. <strong>Click any link</strong> to illuminate its connected nodes and all other nodes that share them. Click a node to view its immediate connections, or click empty canvas to reset.</p>
   </div>
 
   <div id="visnet-root">
     <div class="visnet-controls">
       <button type="button" class="visnet-toggle-physics-btn visnet-btn" disabled>
-        <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
+        <i class="fas fa-circle-notch" aria-hidden="true"></i> Circular Layout
       </button>
       <button type="button" class="visnet-fit-btn visnet-btn" disabled>
         <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
@@ -369,15 +337,12 @@
 
     <div class="visnet-container" role="img" aria-label="Westmeath arts and creative network graph">
       <div class="visnet-loading-spinner">
-        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Building network…
-      </div>
-      <div class="visnet-fs-instruction">
-        <i class="fas fa-magic" aria-hidden="true"></i> Press Spacebar to toggle layout
+        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Laying out network…
       </div>
       <div class="visnet-legend"></div>
       <div class="visnet-fullscreen-controls">
         <button type="button" class="visnet-toggle-physics-btn visnet-btn">
-          <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
+          <i class="fas fa-circle-notch" aria-hidden="true"></i> Circular Layout
         </button>
         <button type="button" class="visnet-fit-btn visnet-btn">
           <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
@@ -400,10 +365,9 @@
     'use strict';
 
     // ====================================================================
-    // DATA – people, organisations & venues with tags
+    // DATA – Westmeath creative ecosystem
     // ====================================================================
     const RAW = [
-      // People / organisations
       { name: "Gateway Youth Project UBU", about: "youth, community, education", contact: "Shelly Dunican", kind: "person" },
       { name: "Barbara – Art Box", about: "visual art, children’s art, workshops, mixed media, DIY", contact: "Barbara", kind: "person" },
       { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
@@ -423,7 +387,6 @@
       { name: "Trea Ivory", about: "visual art, illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
       { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
 
-      // Venues / spaces / organisations
       { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
       { name: "Abbey Road Artists' Studios", about: "artist studios, visual art, creative workspace, exhibitions, workshops, community arts", contact: "", kind: "venue" },
       { name: "Abbey Road Community Space", about: "exhibitions, workshops, classes, talks, community and creative projects", contact: "", kind: "venue" },
@@ -471,14 +434,12 @@
       { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
     ];
 
-    // Colour palette – people & venues stay distinct; tags get unique colours by sector
     const COLORS = {
-      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
-      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
+      person:  { background: '#FF6F61', border: '#D32F2F' },
+      venue:   { background: '#5C6BC0', border: '#3949AB' },
       edge:    'rgba(144, 164, 174, 0.42)'
     };
 
-    // Sector → colour
     const SECTOR_COLORS = {
       'Visual Art':          { background: '#E91E63', border: '#C2185B' },
       'Craft & Making':      { background: '#FF9800', border: '#F57C00' },
@@ -494,28 +455,6 @@
       'Public & Outdoor':    { background: '#66BB6A', border: '#43A047' },
       'Enterprise & Admin':  { background: '#7E57C2', border: '#5E35B1' },
       'Other':               { background: '#90A4AE', border: '#607D8B' }
-    };
-
-    // Calmer, gentler physics configuration (High damping, fast settling, minimal drift)
-    const CALM_PHYSICS = {
-      enabled: true,
-      solver: 'forceAtlas2Based',
-      forceAtlas2Based: {
-        gravitationalConstant: -40,
-        centralGravity: 0.018,
-        springLength: 135,
-        springConstant: 0.08,
-        damping: 0.88,         // High damping eliminates oscillating bounce
-        avoidOverlap: 0.85
-      },
-      minVelocity: 0.75,       // Stops simulation quickly once settled
-      maxVelocity: 28,         // Prevents explosive sudden movements
-      stabilization: {
-        enabled: true,
-        iterations: 400,       // Computes layout off-screen before reveal
-        updateInterval: 50,
-        fit: true
-      }
     };
 
     function getSector(tag) {
@@ -547,7 +486,7 @@
         .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
 
-    // Build graph data
+    // Build dataset
     function buildGraph() {
       const nodes = [];
       const edges = [];
@@ -571,7 +510,6 @@
           shape: 'dot',
           size: type === 'tag' ? 14 : 22,
           borderWidth: 1,
-          mass: 1,
           opacity: 1,
           ...extra
         };
@@ -590,7 +528,6 @@
           id: edgeId,
           from,
           to,
-          arrows: '',
           color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' },
           width: 1.2,
           originalWidth: 1.2
@@ -599,7 +536,6 @@
         nodes[nodeMap[to]].edgeCount++;
       }
 
-      // 1. Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
         const eid = 'ent_' + idx;
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
@@ -635,23 +571,12 @@
         });
       });
 
-      // 2. Size & mass by connectivity
+      // Size by connectivity
       nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 12 : 18;
-        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
-        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, size);
-        n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
+        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 6.5 : 9);
+        n.size = Math.min(n.nodeType === 'tag' ? 34 : 50, size);
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
-      });
-
-      // 3. Initial circular coordinates
-      const total = nodes.length;
-      const radius = 820;
-      const step = total > 0 ? (2 * Math.PI) / total : 0;
-      nodes.forEach((n, i) => {
-        n.x = Math.cos(i * step) * radius;
-        n.y = Math.sin(i * step) * radius;
-        n.fixed = { x: true, y: true };
       });
 
       // Legend
@@ -688,15 +613,13 @@
       const container   = root.querySelector('.visnet-container');
       const spinner     = root.querySelector('.visnet-loading-spinner');
       const legendEl    = root.querySelector('.visnet-legend');
-      const instruction = root.querySelector('.visnet-fs-instruction');
       const fsControls  = root.querySelector('.visnet-fullscreen-controls');
       const statsEl     = document.getElementById('visnet-stats');
 
       let network, nodesDS, edgesDS;
-      let isPhysicsEnabled = true;
-      let isToggling = false;
-      let wasPhysicsBeforeFS = true;
+      let isCircularLayout = false;
       let textCache = {};
+      let savedClusterPositions = {};
 
       function unlock() {
         root.querySelectorAll('.visnet-btn, .visnet-select').forEach(el => { el.disabled = false; });
@@ -705,7 +628,6 @@
       function showError(msg) {
         if (!spinner) return;
         spinner.innerHTML = `<span class="visnet-error-text"><i class="fas fa-exclamation-triangle"></i> ${msg}</span>`;
-        spinner.style.animation = 'none';
         spinner.style.display = 'block';
       }
 
@@ -714,7 +636,7 @@
                   document.mozFullScreenElement || document.msFullscreenElement);
       }
 
-      // Custom node labels
+      // Custom canvas labels
       function drawLabels(ctx, net, nodesData, isExport = false) {
         ctx.save();
         ctx.textAlign = 'center';
@@ -742,7 +664,7 @@
           const isDimmed = (n.opacity !== undefined && n.opacity < 0.5);
 
           if (isDimmed) {
-            ctx.fillStyle = 'rgba(100, 116, 139, 0.22)';
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = isExport ? 3 : 0.5;
           } else {
@@ -753,20 +675,20 @@
 
           let fontSize, padding;
           if (n.nodeType === 'tag') {
-            padding = 28;
+            padding = 26;
             fontSize = fs ? (isExport ? 18 : 15) : 11;
           } else if (n.edgeCount <= 2) {
-            padding = 36;
+            padding = 34;
             fontSize = fs ? (isExport ? 20 : 16) : 12;
           } else {
-            padding = 48;
+            padding = 46;
             const base = fs ? (isExport ? 22 : 18) : 13;
             fontSize = Math.max(fs ? (isExport ? 18 : 15) : 12, base + (16 * ((n.size - 18) / 34)));
           }
 
           if (!textCache[id] || textCache[id].fontSize !== fontSize) {
-            let txt = n.externalLabel.length > 42
-              ? n.externalLabel.substring(0, 39) + '…'
+            let txt = n.externalLabel.length > 40
+              ? n.externalLabel.substring(0, 37) + '…'
               : n.externalLabel;
             txt = decodeEntities(txt);
 
@@ -813,7 +735,6 @@
         ctx.restore();
       }
 
-      // Reset all highlights back to default state
       function resetHighlight() {
         nodesDS.update(nodesDS.get().map(n => ({
           id: n.id,
@@ -827,9 +748,7 @@
         })));
       }
 
-      // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
-        // Update nodes
         const nodeUpdates = nodesDS.get().map(n => {
           const isLit = litNodeIds.has(n.id);
           return {
@@ -840,76 +759,84 @@
         });
         nodesDS.update(nodeUpdates);
 
-        // Update edges
         const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
             return {
               id: e.id,
-              width: 3.5,
+              width: 3.8,
               color: { color: '#1a56db', highlight: '#1e40af', hover: '#1e40af' }
             };
           } else if (litEdgeIds.has(e.id)) {
             return {
               id: e.id,
               width: 2.0,
-              color: { color: 'rgba(59, 130, 246, 0.65)', highlight: '#2563eb', hover: '#2563eb' }
+              color: { color: 'rgba(59, 130, 246, 0.7)', highlight: '#2563eb', hover: '#2563eb' }
             };
           } else {
             return {
               id: e.id,
               width: 0.8,
-              color: { color: 'rgba(203, 213, 225, 0.18)', highlight: 'rgba(203, 213, 225, 0.25)', hover: 'rgba(203, 213, 225, 0.25)' }
+              color: { color: 'rgba(203, 213, 225, 0.16)', highlight: 'rgba(203, 213, 225, 0.25)', hover: 'rgba(203, 213, 225, 0.25)' }
             };
           }
         });
         edgesDS.update(edgeUpdates);
       }
 
-      // Render network
       function render(data) {
         textCache = {};
-
-        let initial = data.nodes;
-        if (isPhysicsEnabled) {
-          initial = initial.map(n => {
-            const c = { ...n, fixed: false };
-            delete c.x; delete c.y;
-            return c;
-          });
-        }
-
-        nodesDS = new vis.DataSet(initial);
+        nodesDS = new vis.DataSet(data.nodes);
         edgesDS = new vis.DataSet(data.edges);
 
+        // Fast Quadtree BarnesHut solver -> completes quickly, then freezes!
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
-          physics: CALM_PHYSICS,
+          physics: {
+            enabled: true,
+            solver: 'barnesHut',
+            barnesHut: {
+              gravitationalConstant: -2800,
+              centralGravity: 0.25,
+              springLength: 95,
+              springConstant: 0.05,
+              damping: 0.95,        // Extremely fast dampening
+              avoidOverlap: 0.4
+            },
+            stabilization: {
+              enabled: true,
+              iterations: 120,      // Quick 120-step resolution
+              updateInterval: 25,
+              fit: true
+            }
+          },
           nodes: {
             shape: 'dot',
-            shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.14)' },
+            shadow: { enabled: true, size: 6, x: 0, y: 2, color: 'rgba(0,0,0,0.12)' },
             font: { size: 0 }
           },
           edges: {
-            smooth: { type: 'continuous', roundness: 0.35 },
+            smooth: { type: 'continuous', roundness: 0.3 },
             color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' },
-            width: 1.2,
-            selectionWidth: 2.5
+            width: 1.2
           },
           interaction: {
             hover: true,
             tooltipDelay: 80,
+            dragNodes: true,
             hideEdgesOnDrag: false,
             multiselect: false
           }
         });
 
-        network.once('stabilizationIterationsDone', () => {
-          network.setOptions({ physics: { enabled: isPhysicsEnabled } });
-        });
-
-        network.once('afterDrawing', () => {
+        // LOCK POSITIONS IMMEDIATELY ONCE SETTLED (NO DRIFTING)
+        function freezeAndFinish() {
+          savedClusterPositions = network.getPositions();
+          network.setOptions({ physics: { enabled: false } }); // STOP physics loop completely
           if (spinner) spinner.style.display = 'none';
           unlock();
-        });
+        }
+
+        network.once('stabilizationIterationsDone', freezeAndFinish);
+        network.once('stabilized', freezeAndFinish);
 
         // Legend
         if (data.legend && legendEl) {
@@ -924,7 +851,6 @@
           legendEl.style.display = 'block';
         }
 
-        // Stats
         if (statsEl && data.stats) {
           const s = data.stats;
           statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
@@ -932,10 +858,10 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Click interaction: Node, Link or Background
+        // Click Logic
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            // Node clicked: Light up this node + its immediate neighbours
+            // Node clicked: Light up node + direct connections
             const selectedId = params.nodes[0];
             const litNodeIds = new Set([selectedId]);
             const litEdgeIds = new Set();
@@ -951,9 +877,10 @@
             });
 
             applyHighlight(litNodeIds, litEdgeIds, null);
+
           } else if (params.edges.length > 0) {
             // LINK CLICKED:
-            // Light up its connected nodes, PLUS all other nodes that connect to them!
+            // Light up its 2 endpoints AND all nodes connected to either endpoint!
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
             if (!clickedEdge) return;
@@ -964,7 +891,6 @@
             const litNodeIds = new Set([endpointA, endpointB]);
             const litEdgeIds = new Set([clickedEdgeId]);
 
-            // Scan all edges touching endpointA or endpointB
             edgesDS.get().forEach(e => {
               const touchesA = (e.from === endpointA || e.to === endpointA);
               const touchesB = (e.from === endpointB || e.to === endpointB);
@@ -976,8 +902,9 @@
             });
 
             applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
+
           } else {
-            // Background clicked: Reset
+            // Empty space clicked: Reset
             resetHighlight();
           }
         });
@@ -985,62 +912,40 @@
         setupListeners();
       }
 
-      function redrawCircular() {
+      function toggleLayout() {
         if (!network || !nodesDS) return;
-        const ids = nodesDS.getIds();
-        const step = ids.length ? (2 * Math.PI) / ids.length : 0;
-        const r = 820;
-        const updates = ids.map((id, i) => ({
-          id,
-          x: Math.cos(i * step) * r,
-          y: Math.sin(i * step) * r,
-          fixed: { x: true, y: true }
-        }));
-        nodesDS.update(updates);
-        network.moveTo({ position: { x: 0, y: 0 }, scale: 1, animation: false });
-        network.fit({ animation: true });
-      }
+        isCircularLayout = !isCircularLayout;
 
-      function togglePhysics() {
-        if (isToggling || !network) return;
-        isToggling = true;
-        isPhysicsEnabled = !isPhysicsEnabled;
+        const label = isCircularLayout ? '<i class="fas fa-project-diagram"></i> Clustered Layout' : '<i class="fas fa-circle-notch"></i> Circular Layout';
+        root.querySelectorAll('.visnet-toggle-physics-btn').forEach(b => { b.innerHTML = label; });
 
-        const icon = isPhysicsEnabled ? 'fa-arrows-alt' : 'fa-circle-notch';
-        root.querySelectorAll('.visnet-toggle-physics-btn').forEach(b => {
-          b.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i> Toggle Layout`;
-        });
-
-        if (isPhysicsEnabled) {
-          network.setOptions({ physics: CALM_PHYSICS });
-          nodesDS.update(nodesDS.getIds().map(id => ({ id, fixed: false })));
+        if (isCircularLayout) {
+          savedClusterPositions = network.getPositions();
+          const ids = nodesDS.getIds();
+          const step = ids.length ? (2 * Math.PI) / ids.length : 0;
+          const r = 780;
+          const updates = ids.map((id, i) => ({
+            id,
+            x: Math.cos(i * step) * r,
+            y: Math.sin(i * step) * r
+          }));
+          nodesDS.update(updates);
+          network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
         } else {
-          network.setOptions({ physics: { enabled: false } });
-          redrawCircular();
+          const updates = Object.keys(savedClusterPositions).map(id => ({
+            id,
+            x: savedClusterPositions[id].x,
+            y: savedClusterPositions[id].y
+          }));
+          nodesDS.update(updates);
+          network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
         }
-        setTimeout(() => { isToggling = false; }, 600);
       }
 
       function handleFSChange() {
         const fs = isFullscreen();
         if (fsControls) fsControls.style.display = fs ? 'flex' : 'none';
-
-        if (fs) {
-          if (instruction) {
-            instruction.style.display = 'block';
-            instruction.style.opacity = '1';
-            setTimeout(() => { instruction.style.opacity = '0'; }, 4000);
-          }
-          wasPhysicsBeforeFS = isPhysicsEnabled;
-          if (!isPhysicsEnabled) togglePhysics();
-        } else {
-          if (instruction) instruction.style.display = 'none';
-          if (isPhysicsEnabled !== wasPhysicsBeforeFS) {
-            togglePhysics();
-          } else if (!isPhysicsEnabled) {
-            redrawCircular();
-          }
-        }
+        setTimeout(() => { if (network) network.fit(); }, 200);
       }
 
       // High-res A1 Export
@@ -1059,7 +964,6 @@
 
         if (spinner) {
           spinner.style.display = 'block';
-          spinner.style.animation = 'visnet-pulse 2.2s ease-in-out infinite';
           spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Rendering ${isPDF ? 'PDF' : 'PNG'}…`;
         }
 
@@ -1112,7 +1016,6 @@
               ...n,
               x: positions[n.id]?.x || 0,
               y: positions[n.id]?.y || 0,
-              fixed: true,
               opacity: 1,
               color: n.originalColor || n.color
             }))),
@@ -1131,7 +1034,7 @@
               font: { size: 0 }
             },
             edges: {
-              smooth: { type: 'continuous', roundness: 0.35 },
+              smooth: { type: 'continuous', roundness: 0.3 },
               color: { color: 'rgba(144,164,174,0.55)' },
               width: 1.6
             }
@@ -1141,11 +1044,11 @@
           expNet.on('afterDrawing', ctx => drawLabels(ctx, expNet, expData.nodes, true));
 
           await new Promise(r => expNet.once('afterDrawing', r));
-          await new Promise(r => setTimeout(r, 150));
+          await new Promise(r => setTimeout(r, 100));
 
           expNet.moveTo({ position: { x: cx, y: cy }, scale, animation: false });
           await new Promise(r => expNet.once('afterDrawing', r));
-          await new Promise(r => setTimeout(r, 250));
+          await new Promise(r => setTimeout(r, 200));
 
           const graphCanvas = expContainer.querySelector('canvas');
           if (!graphCanvas) throw new Error('Canvas not found');
@@ -1155,7 +1058,6 @@
           posterCanvas.height = posterH;
           const ctx = posterCanvas.getContext('2d', { alpha: false });
 
-          // Background
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, posterW, posterH);
 
@@ -1168,7 +1070,6 @@
           ctx.fillStyle = bgGrad;
           ctx.fillRect(0, graphY, posterW, graphH);
 
-          // Subtle grid
           ctx.save();
           ctx.beginPath();
           ctx.rect(0, graphY, posterW, graphH);
@@ -1183,15 +1084,12 @@
           }
           ctx.restore();
 
-          // Graph
           ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
 
-          // Frame
           ctx.strokeStyle = 'rgba(15,23,42,0.18)';
           ctx.lineWidth = 4;
           ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
 
-          // Footer caption
           ctx.fillStyle = 'rgba(15,23,42,0.45)';
           ctx.font = '28px Inter, sans-serif';
           ctx.textAlign = 'center';
@@ -1229,14 +1127,13 @@
         }
       }
 
-      // Event listeners
       function setupListeners() {
         root.querySelectorAll('.visnet-toggle-physics-btn')
-            .forEach(b => b.addEventListener('click', togglePhysics));
+            .forEach(b => b.addEventListener('click', toggleLayout));
 
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
-            if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+            if (network) network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
           });
         });
 
@@ -1263,21 +1160,13 @@
         ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
           .forEach(e => document.addEventListener(e, handleFSChange));
 
-        document.addEventListener('keydown', e => {
-          if (e.code === 'Space' && isFullscreen()) {
-            e.preventDefault();
-            togglePhysics();
-          }
-        }, { passive: false });
-
         new ResizeObserver(() => {
-          if (network && !isPhysicsEnabled && !isFullscreen()) {
-            network.fit({ animation: true });
+          if (network && !isFullscreen()) {
+            network.fit();
           }
         }).observe(container);
       }
 
-      // Start
       try {
         if (typeof vis === 'undefined') {
           showError('vis-network library failed to load.');
