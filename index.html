@@ -38,7 +38,7 @@
     .page-header {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 24px 20px 8px;
+      padding: 28px 20px 8px;
     }
 
     .page-header h1 {
@@ -67,7 +67,7 @@
       background: #fff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      margin: 16px 0 14px;
+      margin: 18px 0 14px;
       padding: 12px 16px;
       display: flex;
       flex-wrap: wrap;
@@ -93,6 +93,8 @@
       border-radius: 16px;
       box-shadow: var(--shadow-lg);
       overflow: hidden;
+      opacity: 0;
+      animation: visnetFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .visnet-container:fullscreen,
@@ -110,8 +112,8 @@
 
     .visnet-fullscreen-controls {
       position: absolute;
-      top: 20px;
-      right: 20px;
+      top: 24px;
+      right: 24px;
       z-index: 1001;
       display: none;
       flex-direction: column;
@@ -180,26 +182,22 @@
       background-color: var(--blue-soft);
     }
 
+    .visnet-select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+    }
+
     .visnet-fullscreen-btn { background: var(--blue); color: #fff; }
     .visnet-fullscreen-btn:hover:not(:disabled) { background: var(--blue-hover); }
 
     .visnet-exit-fs-btn { background: #dc2626; color: #fff; }
     .visnet-exit-fs-btn:hover:not(:disabled) { background: #b91c1c; }
 
-    .visnet-fit-btn { background: #059669; color: #fff; }
-    .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
-
-    .visnet-legend-btn {
-      background: #eff6ff;
-      color: var(--blue-text);
-      border: 1px solid #bfdbfe;
-    }
-    .visnet-legend-btn:hover:not(:disabled) { background: #dbeafe; }
-    .visnet-legend-btn.active {
-      background: var(--blue);
+    .visnet-fit-btn {
+      background: #059669;
       color: #fff;
-      border-color: var(--blue);
     }
+    .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
 
     .visnet-search-wrap {
       position: relative;
@@ -253,7 +251,8 @@
       align-items: center;
       gap: 8px;
     }
-    .visnet-search-results li:hover {
+    .visnet-search-results li:hover,
+    .visnet-search-results li.active {
       background: var(--blue-soft);
       color: var(--blue-text);
     }
@@ -282,135 +281,125 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-weight: 600;
+      font-weight: 500;
       color: var(--blue-text);
-      background: rgba(255, 255, 255, 0.98);
-      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.97);
+      padding: 14px 28px;
       border-radius: 10px;
       z-index: 1002;
       box-shadow: var(--shadow-md);
-      font-size: 13px;
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 0.01em;
       border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      animation: visnet-pulse 2.2s ease-in-out infinite;
     }
 
     .visnet-error-text { color: #dc2626; font-weight: 600; }
 
-    /* Interactive Docked Legend */
-    .visnet-legend-panel {
-      position: absolute;
-      bottom: 14px;
-      right: 14px;
-      background: rgba(255, 255, 255, 0.98);
-      padding: 12px 14px;
-      border-radius: var(--radius);
-      font-size: 11.5px;
-      z-index: 1000;
-      box-shadow: var(--shadow-lg);
-      backdrop-filter: blur(8px);
-      border: 1px solid #cbd5e1;
-      width: 250px;
-      max-height: 420px;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
-    }
-
-    .visnet-legend-panel.collapsed {
+    .visnet-legend {
       display: none;
-    }
-
-    .visnet-legend-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .visnet-legend-header span {
-      font-weight: 700;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #475569;
-    }
-
-    .visnet-legend-close {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #94a3b8;
-      font-size: 13px;
-      padding: 2px 5px;
-      border-radius: 4px;
-    }
-    .visnet-legend-close:hover { color: #0f172a; background: #f1f5f9; }
-
-    .visnet-legend-content {
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      background: rgba(255, 255, 255, 0.97);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      z-index: 1000;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      width: 210px;
+      max-height: 55vh;
       overflow-y: auto;
-      padding-right: 4px;
     }
 
-    .visnet-legend-section {
-      margin-bottom: 10px;
-    }
-
-    .visnet-legend-title {
-      font-size: 10px;
+    .visnet-legend .legend-title {
       font-weight: 700;
+      font-size: 10.5px;
       text-transform: uppercase;
-      color: #94a3b8;
-      letter-spacing: 0.04em;
-      margin-bottom: 5px;
+      margin: 8px 0 8px;
+      color: #64748b;
+      letter-spacing: 0.06em;
     }
+    .visnet-legend .legend-title:first-child { margin-top: 0; }
 
     .visnet-legend-item {
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 5px 8px;
-      border-radius: 6px;
-      cursor: pointer;
+      margin-bottom: 6px;
       color: #334155;
-      font-weight: 500;
-      transition: all 0.12s;
     }
 
-    .visnet-legend-item:hover {
-      background: var(--blue-soft);
-      color: var(--blue-text);
-    }
+    .visnet-legend-item:last-child { margin-bottom: 0; }
 
-    .visnet-legend-item.active {
-      background: #dbeafe;
-      color: #1e40af;
-      font-weight: 700;
-      box-shadow: inset 0 0 0 1px #93c5fd;
-    }
-
-    .visnet-legend-dot {
-      width: 10px;
-      height: 10px;
+    .visnet-legend-color {
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
+      margin-right: 9px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
       flex-shrink: 0;
     }
 
-    .visnet-legend-count {
-      margin-left: auto;
-      font-size: 10px;
-      font-weight: 600;
-      color: #94a3b8;
+    .visnet-legend-search {
+      width: 100%;
+      padding: 7px 10px 7px 30px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1.5px solid #c7d2fe;
+      color: var(--blue-text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 9px center;
+      outline: none;
+      margin-bottom: 4px;
     }
+    .visnet-legend-search:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.12);
+    }
+    .visnet-legend-hits {
+      list-style: none;
+      margin: 0 0 6px;
+      padding: 0;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .visnet-legend-hits li {
+      padding: 5px 6px;
+      font-size: 11.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #334155;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .visnet-legend-hits li:hover { background: var(--blue-soft); color: var(--blue-text); }
 
     .visnet-stats {
       text-align: center;
       margin-top: 12px;
       font-size: 13px;
       color: #64748b;
+    }
+
+    @keyframes visnet-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0.18); }
+      70%  { box-shadow: 0 0 0 10px rgba(26, 86, 219, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0); }
+    }
+
+    @keyframes visnetFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .visnet-container { animation: none; opacity: 1; }
+      .visnet-loading-spinner { animation: none; }
     }
 
     @media (max-width: 900px) {
@@ -433,12 +422,6 @@
         width: 100%;
         justify-content: center;
       }
-      .visnet-legend-panel {
-        width: calc(100% - 28px);
-        max-height: 240px;
-        bottom: 14px;
-        right: 14px;
-      }
       .page-header h1 { font-size: 1.35rem; }
     }
   </style>
@@ -446,7 +429,7 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 2-hop path. Click any legend item to highlight its community. Click empty space to reset.</p>
+    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 2-hop path. Use the search box or legend search to find someone. Click a link to highlight related nodes. Click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
@@ -457,9 +440,6 @@
       </div>
       <button type="button" class="visnet-fit-btn visnet-btn" disabled>
         <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
-      </button>
-      <button type="button" class="visnet-legend-btn visnet-btn active" id="visnet-legend-btn" disabled>
-        <i class="fas fa-layer-group" aria-hidden="true"></i> Legend
       </button>
       <select class="visnet-export-select visnet-select" aria-label="Export Graph" disabled>
         <option value="">Export…</option>
@@ -472,19 +452,10 @@
     </div>
 
     <div class="visnet-container" role="img" aria-label="Westmeath arts and creative network graph">
-      <div class="visnet-loading-spinner" id="visnet-spinner">
-        <i class="fas fa-circle-notch fa-spin"></i> Loading network…
+      <div class="visnet-loading-spinner">
+        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Building network…
       </div>
-
-      <!-- Interactive Legend Panel -->
-      <div class="visnet-legend-panel" id="visnet-legend-panel">
-        <div class="visnet-legend-header">
-          <span><i class="fas fa-palette"></i> Network Legend</span>
-          <button class="visnet-legend-close" id="visnet-legend-close" title="Hide Legend"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="visnet-legend-content" id="visnet-legend-content"></div>
-      </div>
-
+      <div class="visnet-legend"></div>
       <div class="visnet-fullscreen-controls">
         <button type="button" class="visnet-fit-btn visnet-btn">
           <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
@@ -506,7 +477,11 @@
   (function () {
     'use strict';
 
+    // ====================================================================
+    // DATA – people, organisations & venues with tags
+    // ====================================================================
     const RAW = [
+      // People / organisations
       { name: "Gateway Youth Project UBU", about: "youth, community, education", contact: "Shelly Dunican", kind: "person" },
       { name: "Barbara – Art Box", about: "visual art, children’s art, workshops, mixed media, DIY", contact: "Barbara", kind: "person" },
       { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
@@ -526,6 +501,8 @@
       { name: "Trea Ivory", about: "visual art, illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
       { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
       { name: "Tadhg Kelleher", about: "music, art, history, heritage, events", contact: "Tadhg Kelleher", kind: "person" },
+
+      // Venues / spaces / organisations
       { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
       { name: "Abbey Road Artists' Studios", about: "artist studios, visual art, creative workspace, exhibitions, workshops, community arts", contact: "", kind: "venue" },
       { name: "Abbey Road Community Space", about: "exhibitions, workshops, classes, talks, community and creative projects", contact: "", kind: "venue" },
@@ -573,46 +550,50 @@
       { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
     ];
 
+    // Colour palette
     const COLORS = {
-      person: { background: '#FF6F61', border: '#D32F2F' },
-      venue:  { background: '#5C6BC0', border: '#3949AB' },
-      edge:   'rgba(144, 164, 174, 0.42)'
+      person:  { background: '#FF6F61', border: '#D32F2F' },
+      venue:   { background: '#5C6BC0', border: '#3949AB' },
+      edge:    'rgba(144, 164, 174, 0.42)'
     };
 
+    // Sector → colour
     const SECTOR_COLORS = {
-      'Visual Art':            { background: '#E91E63', border: '#C2185B' },
-      'Craft & Making':        { background: '#FF9800', border: '#F57C00' },
-      'Performing Arts':       { background: '#9C27B0', border: '#7B1FA2' },
-      'Music':                 { background: '#00BCD4', border: '#0097A7' },
-      'Literature & Words':    { background: '#8BC34A', border: '#689F38' },
-      'Community & Education': { background: '#F59E0B', border: '#D97706' },
-      'Heritage & Museums':    { background: '#795548', border: '#5D4037' },
-      'Media & Broadcast':     { background: '#607D8B', border: '#455A64' },
-      'Events & Festivals':    { background: '#EF4444', border: '#DC2626' },
-      'Dance':                 { background: '#EC407A', border: '#C2185B' },
-      'Film & Screen':         { background: '#26A69A', border: '#00897B' },
-      'Public & Outdoor':      { background: '#66BB6A', border: '#43A047' },
-      'Enterprise & Admin':    { background: '#7E57C2', border: '#5E35B1' },
-      'Other':                 { background: '#90A4AE', border: '#607D8B' }
+      'Visual Art':          { background: '#E91E63', border: '#C2185B' },
+      'Craft & Making':      { background: '#FF9800', border: '#F57C00' },
+      'Performing Arts':     { background: '#9C27B0', border: '#7B1FA2' },
+      'Music':               { background: '#00BCD4', border: '#0097A7' },
+      'Literature & Words':  { background: '#8BC34A', border: '#689F38' },
+      'Community & Education': { background: '#FFEB3B', border: '#F9A825' },
+      'Heritage & Museums':  { background: '#795548', border: '#5D4037' },
+      'Media & Broadcast':   { background: '#607D8B', border: '#455A64' },
+      'Events & Festivals':  { background: '#F44336', border: '#D32F2F' },
+      'Dance':               { background: '#EC407A', border: '#C2185B' },
+      'Film & Screen':       { background: '#26A69A', border: '#00897B' },
+      'Public & Outdoor':    { background: '#66BB6A', border: '#43A047' },
+      'Enterprise & Admin':  { background: '#7E57C2', border: '#5E35B1' },
+      'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // FAST RESOLVING BARNES-HUT PHYSICS
-    const FAST_PHYSICS = {
+    // Physics settings
+    const CALM_PHYSICS = {
       enabled: true,
-      solver: 'barnesHut',
-      barnesHut: {
-        theta: 0.5,
-        gravitationalConstant: -2600,
-        centralGravity: 0.2,
-        springLength: 95,
-        springConstant: 0.05,
-        damping: 0.8,
-        avoidOverlap: 0.2
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant: -32,
+        centralGravity: 0.015,
+        springLength: 140,
+        springConstant: 0.07,
+        damping: 0.97,
+        avoidOverlap: 0.85
       },
+      minVelocity: 2.5,
+      maxVelocity: 10,
+      timestep: 0.45,
       stabilization: {
         enabled: true,
-        iterations: 40,
-        updateInterval: 40,
+        iterations: 280,
+        updateInterval: 25,
         fit: true
       }
     };
@@ -646,13 +627,15 @@
         .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
 
+    // Build graph data
     function buildGraph() {
       const nodes = [];
       const edges = [];
       const edgeKeys = new Set();
       const nodeMap = {};
       const tagIdMap = {};
-      const sectorCounts = {};
+      const entityTagMap = {};
+      const usedSectors = new Set();
 
       function addNode(id, label, type, color, extra = {}) {
         if (nodeMap[id] !== undefined) return id;
@@ -682,8 +665,9 @@
         const ek = from < to ? from + '|' + to : to + '|' + from;
         if (edgeKeys.has(ek)) return;
         edgeKeys.add(ek);
+        const edgeId = 'e_' + edges.length;
         edges.push({
-          id: 'e_' + edges.length,
+          id: edgeId,
           from,
           to,
           arrows: '',
@@ -695,6 +679,7 @@
         nodes[nodeMap[to]].edgeCount++;
       }
 
+      // Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
         const eid = 'ent_' + idx;
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
@@ -709,50 +694,68 @@
         });
 
         const tags = item.about.split(',').map(t => normTag(t)).filter(Boolean);
+        entityTagMap[eid] = [];
+
         tags.forEach(tag => {
           let tid = tagIdMap[tag];
-          const sector = getSector(tag);
-          sectorCounts[sector] = (sectorCounts[sector] || 0) + 1;
           if (!tid) {
             tid = 'tag_' + Object.keys(tagIdMap).length;
             tagIdMap[tag] = tid;
+            const sector = getSector(tag);
+            usedSectors.add(sector);
             const col = SECTOR_COLORS[sector] || SECTOR_COLORS['Other'];
             const display = tag.replace(/\b\w/g, c => c.toUpperCase());
             addNode(tid, display, 'tag', col, {
-              title: `Skill: ${display}\nSector: ${sector}`,
+              title: `Skill / Practice: ${display}\nSector: ${sector}`,
               sector
             });
           }
+          entityTagMap[eid].push(tid);
           addEdge(eid, tid);
         });
       });
 
-      // Sizes and initial radial dispersal coordinates (makes solver resolve in <150ms)
-      const total = nodes.length;
-      const step = (2 * Math.PI) / (total || 1);
-      nodes.forEach((n, i) => {
+      // Size & mass by connectivity
+      nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 12 : 18;
-        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10));
+        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
+        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, size);
         n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
-
-        const rad = n.nodeType === 'tag' ? 380 : 650;
-        n.x = Math.cos(i * step) * rad;
-        n.y = Math.sin(i * step) * rad;
       });
 
-      return {
-        nodes,
-        edges,
-        sectorCounts,
-        stats: {
-          entities: RAW.length,
-          people: RAW.filter(r => r.kind === 'person').length,
-          venues: RAW.filter(r => r.kind === 'venue').length,
-          tags: Object.keys(tagIdMap).length,
-          connections: edges.length
-        }
+      // Initial coordinates
+      const total = nodes.length;
+      const radius = 820;
+      const step = total > 0 ? (2 * Math.PI) / total : 0;
+      nodes.forEach((n, i) => {
+        n.x = Math.cos(i * step) * radius;
+        n.y = Math.sin(i * step) * radius;
+        n.fixed = { x: true, y: true };
+      });
+
+      // Legend
+      const legend = {
+        'Artist / Organisation': COLORS.person.background,
+        'Venue / Space': COLORS.venue.background
       };
+      const sectorOrder = [
+        'Visual Art', 'Craft & Making', 'Performing Arts', 'Music', 'Dance',
+        'Literature & Words', 'Community & Education', 'Heritage & Museums',
+        'Media & Broadcast', 'Events & Festivals', 'Film & Screen',
+        'Public & Outdoor', 'Enterprise & Admin', 'Other'
+      ];
+      sectorOrder.forEach(s => {
+        if (usedSectors.has(s)) legend[s] = SECTOR_COLORS[s].background;
+      });
+
+      return { nodes, edges, legend, stats: {
+        entities: RAW.length,
+        people: RAW.filter(r => r.kind === 'person').length,
+        venues: RAW.filter(r => r.kind === 'venue').length,
+        tags: Object.keys(tagIdMap).length,
+        connections: edges.length
+      }};
     }
 
     // ====================================================================
@@ -762,21 +765,17 @@
       const root = document.getElementById('visnet-root');
       if (!root) return;
 
-      const container     = root.querySelector('.visnet-container');
-      const spinner       = document.getElementById('visnet-spinner');
-      const legendPanel   = document.getElementById('visnet-legend-panel');
-      const legendContent = document.getElementById('visnet-legend-content');
-      const legendClose   = document.getElementById('visnet-legend-close');
-      const legendToggle  = document.getElementById('visnet-legend-btn');
-      const fsControls    = root.querySelector('.visnet-fullscreen-controls');
-      const statsEl       = document.getElementById('visnet-stats');
-      const searchInput   = root.querySelector('.visnet-search-input');
+      const container   = root.querySelector('.visnet-container');
+      const spinner     = root.querySelector('.visnet-loading-spinner');
+      const legendEl    = root.querySelector('.visnet-legend');
+      const fsControls  = root.querySelector('.visnet-fullscreen-controls');
+      const statsEl     = document.getElementById('visnet-stats');
+      const searchInput = root.querySelector('.visnet-search-input');
       const searchResults = root.querySelector('.visnet-search-results');
 
       let network, nodesDS, edgesDS;
       let textCache = {};
       let searchIndex = [];
-      let activeLegendFilter = null;
 
       function unlock() {
         root.querySelectorAll('.visnet-btn, .visnet-select, .visnet-search-input').forEach(el => { el.disabled = false; });
@@ -785,12 +784,16 @@
       function showError(msg) {
         if (!spinner) return;
         spinner.innerHTML = `<span class="visnet-error-text"><i class="fas fa-exclamation-triangle"></i> ${msg}</span>`;
+        spinner.style.animation = 'none';
+        spinner.style.display = 'block';
       }
 
       function isFullscreen() {
-        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+        return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                  document.mozFullScreenElement || document.msFullscreenElement);
       }
 
+      // Custom node labels
       function drawLabels(ctx, net, nodesData, isExport = false) {
         ctx.save();
         ctx.textAlign = 'center';
@@ -802,6 +805,14 @@
 
         const pos = net.getPositions();
         const fs  = isFullscreen() || isExport;
+
+        const hubs = [];
+        for (const id in pos) {
+          const n = nodesData.get(id);
+          if (n && n.edgeCount >= 8) {
+            hubs.push({ x: pos[id].x, y: pos[id].y, r: (n.size || 20) + (fs ? 95 : 70) });
+          }
+        }
 
         for (const id in pos) {
           const n = nodesData.get(id);
@@ -821,21 +832,28 @@
 
           let fontSize, padding;
           if (n.nodeType === 'tag') {
-            padding = 24;
-            fontSize = fs ? (isExport ? 18 : 14) : 11;
+            padding = 28;
+            fontSize = fs ? (isExport ? 18 : 15) : 11;
+          } else if (n.edgeCount <= 2) {
+            padding = 36;
+            fontSize = fs ? (isExport ? 20 : 16) : 12;
           } else {
-            padding = 34;
-            fontSize = fs ? (isExport ? 20 : 15) : 12;
+            padding = 48;
+            const base = fs ? (isExport ? 22 : 18) : 13;
+            fontSize = Math.max(fs ? (isExport ? 18 : 15) : 12, base + (16 * ((n.size - 18) / 34)));
           }
 
           if (!textCache[id] || textCache[id].fontSize !== fontSize) {
-            let txt = n.externalLabel.length > 36 ? n.externalLabel.substring(0, 33) + '…' : n.externalLabel;
+            let txt = n.externalLabel.length > 42
+              ? n.externalLabel.substring(0, 39) + '…'
+              : n.externalLabel;
             txt = decodeEntities(txt);
+
             const words = txt.split(' ');
             const lines = [];
             let cur = '';
             ctx.font = `${fontSize}px Inter, sans-serif`;
-            const wrap = fs ? 120 : 80;
+            const wrap = fs ? 130 : 85;
 
             for (let i = 0; i < words.length; i++) {
               if (ctx.measureText(cur + words[i] + ' ').width > wrap && i > 0) {
@@ -850,25 +868,33 @@
           }
 
           const cached = textCache[id];
-          const ang = Math.atan2(pos[id].y, pos[id].x);
-          const dist = n.size + padding + 6;
-          const lx = pos[id].x + Math.cos(ang) * dist;
-          const ly = pos[id].y + Math.sin(ang) * dist;
-          const sy = ly - (cached.lines.length * (fontSize * 1.25) - fontSize * 1.25) / 2;
+          const ang  = Math.atan2(pos[id].y, pos[id].x);
+          let dist = n.size + padding + (n.size / 2.2);
+
+          let lx = pos[id].x + Math.cos(ang) * dist;
+          let ly = pos[id].y + Math.sin(ang) * dist;
+          hubs.forEach(h => {
+            const dx = lx - h.x, dy = ly - h.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < h.r) dist += (h.r - d) + 18;
+          });
+
+          lx = pos[id].x + Math.cos(ang) * dist;
+          ly = pos[id].y + Math.sin(ang) * dist;
+          const sy = ly - (cached.lines.length * (fontSize * 1.32) - fontSize * 1.32) / 2;
 
           ctx.font = `${cached.fontSize}px Inter, sans-serif`;
           cached.lines.forEach((l, i) => {
-            ctx.strokeText(l, lx, sy + i * (fontSize * 1.25));
-            ctx.fillText(l, lx, sy + i * (fontSize * 1.25));
+            ctx.strokeText(l, lx, sy + i * (fontSize * 1.32));
+            ctx.fillText(l, lx, sy + i * (fontSize * 1.32));
           });
         }
         ctx.restore();
       }
 
+      // Reset all highlights back to default state
       function resetHighlight() {
         if (!nodesDS || !edgesDS) return;
-        activeLegendFilter = null;
-        document.querySelectorAll('.visnet-legend-item').forEach(el => el.classList.remove('active'));
         nodesDS.update(nodesDS.get().map(n => ({
           id: n.id,
           opacity: 1,
@@ -881,23 +907,18 @@
         })));
       }
 
-      // 2-HOP PATH
-      function highlightNodePath(selectedId, hops = 2) {
+      // Highlight N-hop neighbourhood around a node
+      function highlightNodePath(selectedId, hops) {
         if (!edgesDS || !nodesDS) return;
-        activeLegendFilter = null;
-        document.querySelectorAll('.visnet-legend-item').forEach(el => el.classList.remove('active'));
-
         const litNodeIds = new Set([selectedId]);
         const litEdgeIds = new Set();
         const adj = {};
-
         edgesDS.get().forEach(e => {
           if (!adj[e.from]) adj[e.from] = [];
           if (!adj[e.to]) adj[e.to] = [];
           adj[e.from].push({ node: e.to, edge: e.id });
           adj[e.to].push({ node: e.from, edge: e.id });
         });
-
         const queue = [[selectedId, 0]];
         while (queue.length) {
           const [cur, depth] = queue.shift();
@@ -913,157 +934,77 @@
         edgesDS.get().forEach(e => {
           if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) litEdgeIds.add(e.id);
         });
-
         applyHighlight(litNodeIds, litEdgeIds, null);
       }
 
-      // LEGEND FILTERING LOGIC
-      function highlightCategoryOrSector(key, type) {
-        if (activeLegendFilter === key) {
-          resetHighlight();
-          return;
-        }
-        activeLegendFilter = key;
-
-        document.querySelectorAll('.visnet-legend-item').forEach(el => {
-          el.classList.toggle('active', el.getAttribute('data-key') === key);
-        });
-
-        const targetNodes = new Set();
-        const litNodeIds = new Set();
-        const litEdgeIds = new Set();
-
-        if (type === 'kind') {
-          // Highlight entities of this type + directly connected skills
-          nodesDS.get().forEach(n => {
-            if (n.nodeType === key) {
-              targetNodes.add(n.id);
-              litNodeIds.add(n.id);
-            }
-          });
-          edgesDS.get().forEach(e => {
-            if (targetNodes.has(e.from)) {
-              litNodeIds.add(e.to);
-              litEdgeIds.add(e.id);
-            } else if (targetNodes.has(e.to)) {
-              litNodeIds.add(e.from);
-              litEdgeIds.add(e.id);
-            }
-          });
-        } else if (type === 'sector') {
-          // Highlight skills in this sector + directly connected artists and venues
-          nodesDS.get().forEach(n => {
-            if (n.sector === key) {
-              targetNodes.add(n.id);
-              litNodeIds.add(n.id);
-            }
-          });
-          edgesDS.get().forEach(e => {
-            if (targetNodes.has(e.from)) {
-              litNodeIds.add(e.to);
-              litEdgeIds.add(e.id);
-            } else if (targetNodes.has(e.to)) {
-              litNodeIds.add(e.from);
-              litEdgeIds.add(e.id);
-            }
-          });
-        }
-
-        applyHighlight(litNodeIds, litEdgeIds, null);
-      }
-
+      // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
-        nodesDS.update(nodesDS.get().map(n => {
+        const nodeUpdates = nodesDS.get().map(n => {
           const isLit = litNodeIds.has(n.id);
           return {
             id: n.id,
             opacity: isLit ? 1 : 0.12,
             color: isLit ? n.originalColor : { background: '#e2e8f0', border: '#cbd5e1' }
           };
-        }));
+        });
+        nodesDS.update(nodeUpdates);
 
-        edgesDS.update(edgesDS.get().map(e => {
+        const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
-            return { id: e.id, width: 3.5, color: { color: '#1a56db' } };
+            return {
+              id: e.id,
+              width: 3.5,
+              color: { color: '#1a56db', highlight: '#1e40af', hover: '#1e40af' }
+            };
           } else if (litEdgeIds.has(e.id)) {
-            return { id: e.id, width: 2.0, color: { color: 'rgba(59, 130, 246, 0.65)' } };
+            return {
+              id: e.id,
+              width: 2.0,
+              color: { color: 'rgba(59, 130, 246, 0.65)', highlight: '#2563eb', hover: '#2563eb' }
+            };
           } else {
-            return { id: e.id, width: 0.8, color: { color: 'rgba(203, 213, 225, 0.15)' } };
-          }
-        }));
-      }
-
-      function buildLegendUI(data) {
-        if (!legendContent) return;
-        let html = '';
-
-        // Entity section
-        html += `<div class="visnet-legend-section">
-                  <div class="visnet-legend-title">Entities (Click to Filter)</div>
-                  <div class="visnet-legend-item" data-key="person" data-type="kind">
-                    <span class="visnet-legend-dot" style="background:${COLORS.person.background}"></span>
-                    <span>Artist / Organisation</span>
-                    <span class="visnet-legend-count">${data.stats.people}</span>
-                  </div>
-                  <div class="visnet-legend-item" data-key="venue" data-type="kind">
-                    <span class="visnet-legend-dot" style="background:${COLORS.venue.background}"></span>
-                    <span>Venue / Space</span>
-                    <span class="visnet-legend-count">${data.stats.venues}</span>
-                  </div>
-                </div>`;
-
-        // Sector section
-        html += `<div class="visnet-legend-section">
-                  <div class="visnet-legend-title">Sectors &amp; Skills</div>`;
-
-        Object.keys(SECTOR_COLORS).forEach(sector => {
-          const count = data.sectorCounts[sector] || 0;
-          if (count > 0) {
-            html += `<div class="visnet-legend-item" data-key="${sector}" data-type="sector">
-                      <span class="visnet-legend-dot" style="background:${SECTOR_COLORS[sector].background}"></span>
-                      <span>${sector}</span>
-                      <span class="visnet-legend-count">${count}</span>
-                    </div>`;
+            return {
+              id: e.id,
+              width: 0.8,
+              color: { color: 'rgba(203, 213, 225, 0.18)', highlight: 'rgba(203, 213, 225, 0.25)', hover: 'rgba(203, 213, 225, 0.25)' }
+            };
           }
         });
-        html += `</div>`;
-
-        legendContent.innerHTML = html;
-
-        // Click handlers on legend items
-        legendContent.querySelectorAll('.visnet-legend-item').forEach(item => {
-          item.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevents canvas click handler from clearing highlight
-            const key = item.getAttribute('data-key');
-            const type = item.getAttribute('data-type');
-            highlightCategoryOrSector(key, type);
-          });
-        });
+        edgesDS.update(edgeUpdates);
       }
 
+      // Render network
       function render(data) {
         textCache = {};
-        nodesDS = new vis.DataSet(data.nodes);
+
+        const initial = data.nodes.map(n => {
+          const c = { ...n, fixed: false };
+          delete c.x; delete c.y;
+          return c;
+        });
+
+        nodesDS = new vis.DataSet(initial);
         edgesDS = new vis.DataSet(data.edges);
 
         searchIndex = data.nodes.map(n => ({
           id: n.id,
-          label: n.externalLabel || n.id,
+          label: n.externalLabel || n.label || n.id,
           type: n.nodeType === 'tag' ? 'Skill' : (n.nodeType === 'person' ? 'Person' : 'Venue'),
-          color: (n.originalColor && n.originalColor.background) || '#90A4AE'
+          color: (n.originalColor && n.originalColor.background) || (n.color && n.color.background) || '#90A4AE'
         })).sort((a, b) => a.label.localeCompare(b.label));
 
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
-          physics: FAST_PHYSICS,
+          physics: CALM_PHYSICS,
           nodes: {
             shape: 'dot',
-            shadow: { enabled: true, size: 6, x: 0, y: 2, color: 'rgba(0,0,0,0.1)' },
+            shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.14)' },
             font: { size: 0 }
           },
           edges: {
-            smooth: { type: 'continuous', roundness: 0.3 },
+            smooth: { type: 'continuous', roundness: 0.35 },
             color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' },
-            width: 1.2
+            width: 1.2,
+            selectionWidth: 2.5
           },
           interaction: {
             hover: true,
@@ -1073,18 +1014,31 @@
           }
         });
 
-        // Stops physics instantly upon completion (settles in <150ms)
-        function finalizeSettling() {
-          network.setOptions({ physics: { enabled: false } });
+        network.once('stabilizationIterationsDone', () => {
+          network.setOptions({ physics: { enabled: true } });
+        });
+
+        network.once('afterDrawing', () => {
           if (spinner) spinner.style.display = 'none';
           unlock();
+        });
+
+        // Legend + embedded search
+        if (data.legend && legendEl) {
+          let html = '<input type="search" class="visnet-legend-search" placeholder="Search…" aria-label="Search in legend" autocomplete="off" />';
+          html += '<ul class="visnet-legend-hits"></ul>';
+          html += '<div class="legend-title">Legend</div>';
+          for (const [type, color] of Object.entries(data.legend)) {
+            html += `<div class="visnet-legend-item">
+                       <span class="visnet-legend-color" style="background:${color}"></span>
+                       <span>${type}</span>
+                     </div>`;
+          }
+          legendEl.innerHTML = html;
+          legendEl.style.display = 'block';
         }
 
-        network.once('stabilizationIterationsDone', finalizeSettling);
-        setTimeout(finalizeSettling, 250); // Fallback guarantee
-
-        buildLegendUI(data);
-
+        // Stats
         if (statsEl && data.stats) {
           const s = data.stats;
           statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
@@ -1092,10 +1046,10 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Click interaction: Node (2 hops), Link, or Reset
+        // Click interaction: Node (2-hop), Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            highlightNodePath(params.nodes[0], 2);
+            highlightNodePath(params.nodes[0], 2); // [CHANGED: 2 hops]
           } else if (params.edges.length > 0) {
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
@@ -1103,11 +1057,14 @@
 
             const endpointA = clickedEdge.from;
             const endpointB = clickedEdge.to;
+
             const litNodeIds = new Set([endpointA, endpointB]);
             const litEdgeIds = new Set([clickedEdgeId]);
 
             edgesDS.get().forEach(e => {
-              if (e.from === endpointA || e.to === endpointA || e.from === endpointB || e.to === endpointB) {
+              const touchesA = (e.from === endpointA || e.to === endpointA);
+              const touchesB = (e.from === endpointB || e.to === endpointB);
+              if (touchesA || touchesB) {
                 litNodeIds.add(e.from);
                 litNodeIds.add(e.to);
                 litEdgeIds.add(e.id);
@@ -1127,48 +1084,55 @@
         if (fsControls) fsControls.style.display = isFullscreen() ? 'flex' : 'none';
       }
 
+      // Focus node from search (2-hop)
       function focusNode(id) {
         if (!network || !nodesDS.get(id)) return;
-        highlightNodePath(id, 2);
+        highlightNodePath(id, 2); // [CHANGED: 2 hops]
         network.focus(id, {
           scale: 1.15,
-          animation: { duration: 350, easingFunction: 'easeInOutQuad' }
+          animation: { duration: 450, easingFunction: 'easeInOutQuad' }
         });
       }
 
-      function runSearch(query, listEl) {
+      function runSearch(query, listEl, isLegend) {
         const q = (query || '').trim().toLowerCase();
         if (!listEl) return;
         if (!q) {
           listEl.innerHTML = '';
-          listEl.classList.remove('open');
+          if (!isLegend) listEl.classList.remove('open');
           return;
         }
         const hits = searchIndex.filter(n => n.label.toLowerCase().includes(q)).slice(0, 18);
         if (!hits.length) {
-          listEl.innerHTML = '<li class="visnet-search-empty">No matches found</li>';
-          listEl.classList.add('open');
+          listEl.innerHTML = isLegend
+            ? '<li class="visnet-search-empty" style="cursor:default">No matches</li>'
+            : '<li class="visnet-search-empty">No matches</li>';
+          if (!isLegend) listEl.classList.add('open');
           return;
         }
         listEl.innerHTML = hits.map(h =>
           `<li data-id="${h.id}" role="option">
             <span class="result-dot" style="background:${h.color}"></span>
             <span>${h.label}</span>
-            <span class="result-type">${h.type}</span>
+            ${isLegend ? '' : `<span class="result-type">${h.type}</span>`}
           </li>`
         ).join('');
-        listEl.classList.add('open');
-
+        if (!isLegend) listEl.classList.add('open');
         listEl.querySelectorAll('li[data-id]').forEach(li => {
           li.addEventListener('click', () => {
             focusNode(li.getAttribute('data-id'));
             if (searchInput) searchInput.value = li.querySelector('span:nth-child(2)')?.textContent || '';
             listEl.innerHTML = '';
-            listEl.classList.remove('open');
+            if (!isLegend) listEl.classList.remove('open');
+            const legendHits = legendEl?.querySelector('.visnet-legend-hits');
+            if (legendHits) legendHits.innerHTML = '';
+            const legendSearch = legendEl?.querySelector('.visnet-legend-search');
+            if (legendSearch) legendSearch.value = '';
           });
         });
       }
 
+      // High-res A1 Export
       async function exportPoster(format) {
         if (!network) return;
         const isPDF = format === 'pdf';
@@ -1178,13 +1142,14 @@
         selects.forEach(sel => {
           const opt = sel.options[sel.selectedIndex];
           original.set(sel, opt.text);
-          opt.text = 'Rendering…';
+          opt.text = 'Processing…';
           sel.disabled = true;
         });
 
         if (spinner) {
-          spinner.style.display = 'flex';
-          spinner.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Generating ${isPDF ? 'PDF' : 'PNG'}…`;
+          spinner.style.display = 'block';
+          spinner.style.animation = 'visnet-pulse 2.2s ease-in-out infinite';
+          spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Rendering ${isPDF ? 'PDF' : 'PNG'}…`;
         }
 
         let hidden, expContainer, expNet, posterCanvas;
@@ -1194,6 +1159,8 @@
           const px = DPI / 25.4;
           const posterW = Math.round(A1_W * px);
           const posterH = Math.round(A1_H * px);
+          const graphY = 0;
+          const graphH = posterH;
 
           const positions = network.getPositions();
           let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -1206,10 +1173,18 @@
             minY = Math.min(minY, positions[n.id].y - pad);
             maxY = Math.max(maxY, positions[n.id].y + pad);
           });
+          if (!isFinite(minX)) {
+            minX = -1400; maxX = 1400; minY = -1400; maxY = 1400;
+          }
 
+          const gW = maxX - minX;
+          const gH = maxY - minY;
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          const margin = 0.025;
           const scale = Math.min(
-            (posterW * 0.95) / (maxX - minX),
-            (posterH * 0.95) / (maxY - minY)
+            (posterW * (1 - margin * 2)) / gW,
+            (graphH  * (1 - margin * 2)) / gH
           ) * 1.02;
 
           hidden = document.createElement('div');
@@ -1218,7 +1193,7 @@
 
           expContainer = document.createElement('div');
           expContainer.style.width  = posterW + 'px';
-          expContainer.style.height = posterH + 'px';
+          expContainer.style.height = graphH + 'px';
           hidden.appendChild(expContainer);
 
           const expData = {
@@ -1239,30 +1214,73 @@
 
           expNet = new vis.Network(expContainer, expData, {
             physics: { enabled: false },
-            nodes: { shape: 'dot', shadow: { enabled: true, size: 16 }, font: { size: 0 } },
-            edges: { smooth: { type: 'continuous', roundness: 0.3 }, color: { color: 'rgba(144,164,174,0.55)' }, width: 1.6 }
+            nodes: {
+              shape: 'dot',
+              shadow: { enabled: true, size: 18 },
+              font: { size: 0 }
+            },
+            edges: {
+              smooth: { type: 'continuous', roundness: 0.35 },
+              color: { color: 'rgba(144,164,174,0.55)' },
+              width: 1.6
+            }
           });
 
-          expNet.setSize(posterW + 'px', posterH + 'px');
+          expNet.setSize(posterW + 'px', graphH + 'px');
           expNet.on('afterDrawing', ctx => drawLabels(ctx, expNet, expData.nodes, true));
 
           await new Promise(r => expNet.once('afterDrawing', r));
-          await new Promise(r => setTimeout(r, 120));
-
-          expNet.moveTo({ position: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }, scale, animation: false });
-          await new Promise(r => expNet.once('afterDrawing', r));
           await new Promise(r => setTimeout(r, 150));
 
+          expNet.moveTo({ position: { x: cx, y: cy }, scale, animation: false });
+          await new Promise(r => expNet.once('afterDrawing', r));
+          await new Promise(r => setTimeout(r, 250));
+
           const graphCanvas = expContainer.querySelector('canvas');
+          if (!graphCanvas) throw new Error('Canvas not found');
+
           posterCanvas = document.createElement('canvas');
           posterCanvas.width  = posterW;
           posterCanvas.height = posterH;
           const ctx = posterCanvas.getContext('2d', { alpha: false });
 
+          // Background
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, posterW, posterH);
-          ctx.drawImage(graphCanvas, 0, 0, posterW, posterH);
 
+          const bgGrad = ctx.createRadialGradient(
+            posterW / 2, graphY + graphH / 2, 0,
+            posterW / 2, graphY + graphH / 2, Math.max(posterW, graphH) * 0.7
+          );
+          bgGrad.addColorStop(0, '#fbfdff');
+          bgGrad.addColorStop(1, '#f4f7fb');
+          ctx.fillStyle = bgGrad;
+          ctx.fillRect(0, graphY, posterW, graphH);
+
+          // Subtle grid
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, graphY, posterW, graphH);
+          ctx.clip();
+          ctx.strokeStyle = 'rgba(26,86,219,0.05)';
+          ctx.lineWidth = 3;
+          for (let x = 0; x <= posterW; x += 160) {
+            ctx.beginPath(); ctx.moveTo(x, graphY); ctx.lineTo(x, graphY + graphH); ctx.stroke();
+          }
+          for (let y = graphY; y <= graphY + graphH; y += 160) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(posterW, y); ctx.stroke();
+          }
+          ctx.restore();
+
+          // Graph
+          ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
+
+          // Frame
+          ctx.strokeStyle = 'rgba(15,23,42,0.18)';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
+
+          // Footer caption
           ctx.fillStyle = 'rgba(15,23,42,0.45)';
           ctx.font = '28px Inter, sans-serif';
           ctx.textAlign = 'center';
@@ -1272,18 +1290,18 @@
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a1' });
             pdf.addImage(posterCanvas.toDataURL('image/jpeg', 0.97), 'JPEG', 0, 0, 594, 841);
-            pdf.save(`westmeath-network-A1-${Date.now()}.pdf`);
+            pdf.save(`westmeath-arts-network-A1-${Date.now()}.pdf`);
           } else {
             const a = document.createElement('a');
-            a.download = `westmeath-network-A1-${Date.now()}.png`;
+            a.download = `westmeath-arts-network-A1-${Date.now()}.png`;
             a.href = posterCanvas.toDataURL('image/png', 1.0);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
           }
         } catch (e) {
-          console.error(e);
-          showError('Export failed.');
+          console.error('A1 Export Error:', e);
+          showError('Export failed. Please try again.');
         } finally {
           if (expNet) expNet.destroy();
           if (hidden?.parentNode) hidden.parentNode.removeChild(hidden);
@@ -1294,20 +1312,16 @@
             sel.value = '';
             sel.disabled = false;
           });
-          if (spinner) spinner.style.display = 'none';
+          if (spinner && !spinner.querySelector('.visnet-error-text')) {
+            spinner.style.display = 'none';
+          }
         }
       }
 
+      // Event listeners
       function setupListeners() {
-        // Prevent events inside legend panel from reaching the vis.js canvas
-        if (legendPanel) {
-          ['click', 'mousedown', 'pointerdown', 'touchstart', 'dblclick'].forEach(evt => {
-            legendPanel.addEventListener(evt, e => e.stopPropagation());
-          });
-        }
-
         if (searchInput && searchResults) {
-          searchInput.addEventListener('input', e => runSearch(e.target.value, searchResults));
+          searchInput.addEventListener('input', e => runSearch(e.target.value, searchResults, false));
           document.addEventListener('click', e => {
             if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
               searchResults.classList.remove('open');
@@ -1315,23 +1329,18 @@
           });
         }
 
-        if (legendToggle && legendPanel) {
-          legendToggle.addEventListener('click', () => {
-            const isCollapsed = legendPanel.classList.toggle('collapsed');
-            legendToggle.classList.toggle('active', !isCollapsed);
-          });
-        }
-
-        if (legendClose && legendPanel) {
-          legendClose.addEventListener('click', () => {
-            legendPanel.classList.add('collapsed');
-            if (legendToggle) legendToggle.classList.remove('active');
+        if (legendEl) {
+          legendEl.addEventListener('input', e => {
+            if (e.target.classList.contains('visnet-legend-search')) {
+              const hitsEl = legendEl.querySelector('.visnet-legend-hits');
+              runSearch(e.target.value, hitsEl, true);
+            }
           });
         }
 
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
-            if (network) network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+            if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
           });
         });
 
@@ -1343,22 +1352,29 @@
 
         root.querySelector('.visnet-fullscreen-btn')?.addEventListener('click', () => {
           if (!isFullscreen()) {
-            container.requestFullscreen?.() || container.webkitRequestFullscreen?.();
+            container.requestFullscreen?.() ||
+            container.webkitRequestFullscreen?.() ||
+            container.msRequestFullscreen?.();
           }
         });
 
         root.querySelector('.visnet-exit-fs-btn')?.addEventListener('click', () => {
-          document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+          document.exitFullscreen?.() ||
+          document.webkitExitFullscreen?.() ||
+          document.msExitFullscreen?.();
         });
 
-        ['fullscreenchange', 'webkitfullscreenchange'].forEach(e => document.addEventListener(e, handleFSChange));
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+          .forEach(e => document.addEventListener(e, handleFSChange));
 
         new ResizeObserver(() => {
-          if (network && !isFullscreen()) network.fit();
+          if (network && !isFullscreen()) {
+            network.fit({ animation: true });
+          }
         }).observe(container);
       }
 
-      // Startup
+      // Start
       try {
         if (typeof vis === 'undefined') {
           showError('vis-network library failed to load.');
@@ -1368,7 +1384,7 @@
         render(data);
       } catch (err) {
         console.error(err);
-        showError('Failed to initialize network.');
+        showError(err.message || 'Failed to build network');
       }
     });
   })();
