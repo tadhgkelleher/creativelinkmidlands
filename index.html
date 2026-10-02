@@ -5,23 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Westmeath Arts &amp; Creative Network</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" />
   <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
-      --blue: #1a56db;
-      --blue-hover: #1e40af;
-      --blue-soft: #eff6ff;
-      --blue-text: #1e3a8a;
-      --bg: #f8fafc;
-      --grid: rgba(26, 86, 219, 0.04);
-      --border: rgba(15, 23, 42, 0.08);
-      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
-      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-      --shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.1), 0 4px 12px -4px rgba(15, 23, 42, 0.06);
-      --radius: 12px;
-      --radius-sm: 8px;
+      --accent: #c45c26;
+      --accent-hover: #a3491c;
+      --accent-soft: #fdf4ef;
+      --accent-text: #7c3a12;
+      --blue: #c45c26;
+      --blue-hover: #a3491c;
+      --blue-soft: #fdf4ef;
+      --blue-text: #7c3a12;
+      --sage: #4a7c59;
+      --sage-soft: #eef6f0;
+      --ink: #2c2420;
+      --ink-muted: #6b5e56;
+      --paper: #f7f3ee;
+      --paper-deep: #efe8df;
+      --bg: #faf7f3;
+      --grid: rgba(196, 92, 38, 0.05);
+      --border: rgba(74, 55, 40, 0.1);
+      --shadow-sm: 0 1px 2px rgba(74, 55, 40, 0.04), 0 1px 3px rgba(74, 55, 40, 0.03);
+      --shadow-md: 0 4px 14px -3px rgba(74, 55, 40, 0.08), 0 2px 6px -1px rgba(74, 55, 40, 0.04);
+      --shadow-lg: 0 16px 40px -10px rgba(74, 55, 40, 0.12), 0 6px 14px -4px rgba(74, 55, 40, 0.06);
+      --radius: 14px;
+      --radius-sm: 9px;
     }
 
     * { box-sizing: border-box; }
@@ -29,53 +39,108 @@
     body {
       margin: 0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f1f5f9;
-      color: #1e293b;
+      background:
+        radial-gradient(ellipse 90% 50% at 10% -10%, rgba(196, 92, 38, 0.07), transparent 50%),
+        radial-gradient(ellipse 70% 40% at 95% 5%, rgba(74, 124, 89, 0.06), transparent 45%),
+        var(--paper);
+      color: var(--ink);
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
     }
 
+    .site-banner {
+      background: linear-gradient(135deg, #3d2e26 0%, #5c4033 55%, #4a372d 100%);
+      color: #f5ebe0;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .site-banner span { opacity: 0.85; }
+
     .page-header {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 28px 20px 8px;
+      padding: 36px 24px 12px;
     }
 
+    .page-header .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding: 5px 12px 5px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-text);
+      background: var(--accent-soft);
+      border: 1px solid rgba(196, 92, 38, 0.18);
+      border-radius: 999px;
+    }
+    .page-header .eyebrow i { font-size: 0.7rem; opacity: 0.9; }
+
     .page-header h1 {
-      margin: 0 0 6px;
-      font-size: 1.65rem;
-      font-weight: 700;
+      margin: 0 0 10px;
+      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.75rem, 3.5vw, 2.35rem);
+      font-weight: 600;
       letter-spacing: -0.02em;
-      color: #0f172a;
+      line-height: 1.15;
+      color: var(--ink);
     }
 
     .page-header p {
       margin: 0;
-      font-size: 0.95rem;
-      color: #64748b;
-      line-height: 1.5;
+      max-width: 62ch;
+      font-size: 1rem;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+    .page-header p strong {
+      color: var(--ink);
+      font-weight: 600;
     }
 
     #visnet-root {
       max-width: 1200px;
-      margin: 0 auto 2.5rem;
-      padding: 0 16px 40px;
+      margin: 0 auto 1.5rem;
+      padding: 0 20px 24px;
       position: relative;
     }
 
     .visnet-controls {
-      background: #fff;
+      background: rgba(255, 252, 248, 0.92);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      margin: 18px 0 14px;
-      padding: 12px 16px;
+      margin: 20px 0 14px;
+      padding: 14px 16px;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 10px;
       box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
     }
+
+    .page-footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8px 24px 40px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+    .page-footer a {
+      color: var(--accent-text);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .page-footer a:hover { text-decoration: underline; }
 
     .visnet-container {
       width: 100%;
@@ -144,7 +209,7 @@
 
     .visnet-btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 4px 12px rgba(74, 55, 40, 0.14);
     }
 
     .visnet-btn:active:not(:disabled) {
@@ -162,42 +227,42 @@
 
     .visnet-btn:focus-visible,
     .visnet-select:focus-visible {
-      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.35);
+      box-shadow: 0 0 0 3px rgba(196, 92, 38, 0.3);
     }
 
     .visnet-select {
-      border: 1.5px solid #c7d2fe;
-      color: var(--blue-text);
+      border: 1.5px solid #e0d0c2;
+      color: var(--accent-text);
       background: #fff;
       cursor: pointer;
       padding-right: 28px;
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c3a12' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 10px center;
     }
 
     .visnet-select:hover:not(:disabled) {
-      border-color: var(--blue);
-      background-color: var(--blue-soft);
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
     }
 
     .visnet-select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(196, 92, 38, 0.15);
     }
 
-    .visnet-fullscreen-btn { background: var(--blue); color: #fff; }
-    .visnet-fullscreen-btn:hover:not(:disabled) { background: var(--blue-hover); }
+    .visnet-fullscreen-btn { background: var(--accent); color: #fff; }
+    .visnet-fullscreen-btn:hover:not(:disabled) { background: var(--accent-hover); }
 
-    .visnet-exit-fs-btn { background: #dc2626; color: #fff; }
-    .visnet-exit-fs-btn:hover:not(:disabled) { background: #b91c1c; }
+    .visnet-exit-fs-btn { background: #9a3412; color: #fff; }
+    .visnet-exit-fs-btn:hover:not(:disabled) { background: #7c2d12; }
 
     .visnet-fit-btn {
-      background: #059669;
+      background: var(--sage);
       color: #fff;
     }
-    .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
+    .visnet-fit-btn:hover:not(:disabled) { background: #3d6a4a; }
 
     .visnet-search-wrap {
       position: relative;
@@ -212,17 +277,17 @@
       font-size: 13px;
       font-weight: 500;
       font-family: inherit;
-      border: 1.5px solid #c7d2fe;
-      color: var(--blue-text);
-      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 12px center;
+      border: 1.5px solid #e0d0c2;
+      color: var(--accent-text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237c3a12' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 12px center;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .visnet-search-input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(196, 92, 38, 0.15);
     }
-    .visnet-search-input::placeholder { color: #94a3b8; font-weight: 400; }
+    .visnet-search-input::placeholder { color: #a89588; font-weight: 400; }
     .visnet-search-results {
       display: none;
       position: absolute;
@@ -245,7 +310,7 @@
       padding: 8px 12px;
       font-size: 12.5px;
       font-weight: 500;
-      color: #334155;
+      color: var(--ink);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -321,7 +386,7 @@
       font-size: 10.5px;
       text-transform: uppercase;
       margin: 8px 0 8px;
-      color: #64748b;
+      color: var(--ink-muted);
       letter-spacing: 0.06em;
     }
     .visnet-legend .legend-title:first-child { margin-top: 0; }
@@ -330,7 +395,7 @@
       display: flex;
       align-items: center;
       margin-bottom: 6px;
-      color: #334155;
+      color: var(--ink);
     }
 
     .visnet-legend-item:last-child { margin-bottom: 0; }
@@ -350,15 +415,15 @@
       border-radius: 6px;
       font-size: 12px;
       font-family: inherit;
-      border: 1.5px solid #c7d2fe;
-      color: var(--blue-text);
-      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 9px center;
+      border: 1.5px solid #e0d0c2;
+      color: var(--accent-text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c3a12' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 9px center;
       outline: none;
       margin-bottom: 4px;
     }
     .visnet-legend-search:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.12);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(196, 92, 38, 0.12);
     }
     .visnet-legend-hits {
       list-style: none;
@@ -372,24 +437,25 @@
       font-size: 11.5px;
       border-radius: 4px;
       cursor: pointer;
-      color: #334155;
+      color: var(--ink);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .visnet-legend-hits li:hover { background: var(--blue-soft); color: var(--blue-text); }
+    .visnet-legend-hits li:hover { background: var(--accent-soft); color: var(--accent-text); }
 
     .visnet-stats {
       text-align: center;
-      margin-top: 12px;
-      font-size: 13px;
-      color: #64748b;
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      letter-spacing: 0.01em;
     }
 
     @keyframes visnet-pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0.18); }
-      70%  { box-shadow: 0 0 0 10px rgba(26, 86, 219, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0); }
+      0%   { box-shadow: 0 0 0 0 rgba(196, 92, 38, 0.18); }
+      70%  { box-shadow: 0 0 0 10px rgba(196, 92, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(196, 92, 38, 0); }
     }
 
     @keyframes visnetFadeIn {
@@ -427,9 +493,18 @@
   </style>
 </head>
 <body>
+  <div class="site-banner">
+    <span>Mapping the creative life of the county · Artists, venues &amp; skills across Westmeath</span>
+  </div>
+
   <div class="page-header">
-    <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 3-hop path. Use the search box or legend search to find someone. Click a link to highlight related nodes. Click empty space to reset.</p>
+    <p class="eyebrow"><i class="fas fa-palette" aria-hidden="true"></i> Westmeath Creative Community</p>
+    <h1>Arts &amp; Creative Network</h1>
+    <p>
+      Explore how artists, organisations, venues and skills connect across the county.
+      <strong>Click a node</strong> to see its circle; use search or the legend to find someone.
+      Click empty space to reset.
+    </p>
   </div>
 
   <div id="visnet-root">
@@ -472,6 +547,10 @@
     </div>
     <div class="visnet-stats" id="visnet-stats"></div>
   </div>
+
+  <footer class="page-footer">
+    Built for the Westmeath creative community · Share connections, find collaborators, grow together
+  </footer>
 
   <script>
   (function () {
@@ -620,6 +699,71 @@
       return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
+    // Merge near-duplicate skill labels into a single canonical tag
+    const TAG_MERGE = {
+      // Community family
+      'community': 'community arts',
+      'community activity': 'community arts',
+      'community and creative projects': 'community arts',
+      'community and cultural activity': 'community arts',
+      'community culture': 'community arts',
+      'community projects': 'community arts',
+      'community participation': 'community arts',
+      'local cultural activity': 'community arts',
+      'local culture': 'community arts',
+      'culture': 'community arts',
+      'community and cultural events': 'community events',
+      'community events': 'community events',
+      // Cultural events family
+      'cultural activity': 'cultural events',
+      'multidisciplinary cultural activity': 'cultural events',
+      'outdoor cultural activity': 'outdoor events',
+      'outdoor cultural events': 'outdoor events',
+      // Visual art family
+      'art': 'visual art',
+      'arts': 'visual art',
+      'contemporary visual art': 'visual art',
+      'multidisciplinary arts': 'visual art',
+      // Exhibitions
+      'public exhibitions': 'exhibitions',
+      // Heritage / history
+      'history': 'heritage',
+      'local history': 'heritage',
+      'cultural heritage': 'heritage',
+      'military heritage': 'heritage',
+      // Workshops / classes
+      'classes': 'workshops',
+      // Music
+      'community music': 'music',
+      'youth music': 'music',
+      // Performance / theatre
+      'drama': 'theatre',
+      // Studios
+      'artist studio': 'artist studios',
+      // Programming
+      'arts programming': 'cultural programming',
+      'public programming': 'cultural programming',
+      // Broadcast
+      'broadcasting history': 'broadcasting',
+      'radio heritage': 'broadcasting',
+      'athlone/moydrum transmission history': 'broadcasting',
+      // Photography
+      'photography community': 'photography',
+      // Craft
+      'traditional craft': 'craft',
+      'irish craft': 'craft',
+      'irish-made work': 'craft',
+      'craft production': 'craft',
+      // Misc
+      'artists': 'artists and organisations',
+      'creative studios': 'artist studios',
+      'creative workspace': 'artist studios'
+    };
+
+    function mergeTag(tag) {
+      return TAG_MERGE[tag] || tag;
+    }
+
     function decodeEntities(txt) {
       return String(txt || '')
         .replace(/&amp;/g, '&').replace(/&#038;/g, '&')
@@ -693,10 +837,14 @@
           about: item.about
         });
 
-        const tags = item.about.split(',').map(t => normTag(t)).filter(Boolean);
+        const tags = item.about.split(',')
+          .map(t => mergeTag(normTag(t)))
+          .filter(Boolean);
+        // Deduplicate after merge (same entity may map to same canonical tag twice)
+        const uniqueTags = [...new Set(tags)];
         entityTagMap[eid] = [];
 
-        tags.forEach(tag => {
+        uniqueTags.forEach(tag => {
           let tid = tagIdMap[tag];
           if (!tid) {
             tid = 'tag_' + Object.keys(tagIdMap).length;
@@ -1048,39 +1196,10 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Shared: highlight N-hop neighbourhood around a node
-        function highlightNodePath(selectedId, hops) {
-          const litNodeIds = new Set([selectedId]);
-          const litEdgeIds = new Set();
-          const adj = {};
-          edgesDS.get().forEach(e => {
-            if (!adj[e.from]) adj[e.from] = [];
-            if (!adj[e.to]) adj[e.to] = [];
-            adj[e.from].push({ node: e.to, edge: e.id });
-            adj[e.to].push({ node: e.from, edge: e.id });
-          });
-          const queue = [[selectedId, 0]];
-          while (queue.length) {
-            const [cur, depth] = queue.shift();
-            if (depth >= hops) continue;
-            for (const { node, edge } of (adj[cur] || [])) {
-              litEdgeIds.add(edge);
-              if (!litNodeIds.has(node)) {
-                litNodeIds.add(node);
-                queue.push([node, depth + 1]);
-              }
-            }
-          }
-          edgesDS.get().forEach(e => {
-            if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) litEdgeIds.add(e.id);
-          });
-          applyHighlight(litNodeIds, litEdgeIds, null);
-        }
-
         // Click interaction: Node, Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            highlightNodePath(params.nodes[0], 3);
+            highlightNodePath(params.nodes[0], 2);
           } else if (params.edges.length > 0) {
             // LINK CLICKED:
             // Light up its connected nodes, PLUS all other nodes that connect to them!
@@ -1121,7 +1240,7 @@
 
       function focusNode(id) {
         if (!network || !nodesDS.get(id)) return;
-        highlightNodePath(id, 3);
+        highlightNodePath(id, 2);
         network.focus(id, {
           scale: 1.15,
           animation: { duration: 450, easingFunction: 'easeInOutQuad' }
@@ -1354,9 +1473,6 @@
 
       // Event listeners
       function setupListeners() {
-        root.querySelectorAll('.visnet-toggle-physics-btn')
-            .forEach(b => b.addEventListener('click', togglePhysics));
-
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
             if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
@@ -1386,18 +1502,41 @@
         ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
           .forEach(e => document.addEventListener(e, handleFSChange));
 
-        document.addEventListener('keydown', e => {
-          if (e.code === 'Space' && isFullscreen()) {
-            e.preventDefault();
-            togglePhysics();
-          }
-        }, { passive: false });
+        // Top search bar
+        if (searchInput && searchResults) {
+          searchInput.addEventListener('input', () => runSearch(searchInput.value, searchResults, false));
+          searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim()) runSearch(searchInput.value, searchResults, false);
+          });
+          document.addEventListener('click', (e) => {
+            if (!root.querySelector('.visnet-search-wrap')?.contains(e.target)) {
+              searchResults.classList.remove('open');
+            }
+          });
+          searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              searchResults.classList.remove('open');
+              searchInput.blur();
+            }
+            if (e.key === 'Enter') {
+              const first = searchResults.querySelector('li[data-id]');
+              if (first) first.click();
+            }
+          });
+        }
 
-        new ResizeObserver(() => {
-          if (network && !isPhysicsEnabled && !isFullscreen()) {
-            network.fit({ animation: true });
-          }
-        }).observe(container);
+        // Legend search
+        const legendSearch = legendEl?.querySelector('.visnet-legend-search');
+        const legendHits = legendEl?.querySelector('.visnet-legend-hits');
+        if (legendSearch && legendHits) {
+          legendSearch.addEventListener('input', () => runSearch(legendSearch.value, legendHits, true));
+          legendSearch.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              const first = legendHits.querySelector('li[data-id]');
+              if (first) first.click();
+            }
+          });
+        }
       }
 
       // Start
