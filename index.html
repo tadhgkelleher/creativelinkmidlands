@@ -193,40 +193,87 @@
     .visnet-exit-fs-btn { background: #dc2626; color: #fff; }
     .visnet-exit-fs-btn:hover:not(:disabled) { background: #b91c1c; }
 
-    .visnet-toggle-physics-btn {
-      background: #fff;
-      border: 1.5px solid #c7d2fe;
-      color: var(--blue-text);
-    }
-    .visnet-toggle-physics-btn:hover:not(:disabled) {
-      background: var(--blue-soft);
-      border-color: var(--blue);
-    }
-
     .visnet-fit-btn {
       background: #059669;
       color: #fff;
     }
     .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
 
-    .visnet-fs-instruction {
-      position: absolute;
-      top: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #fff;
-      background: rgba(30, 58, 138, 0.92);
-      padding: 11px 22px;
-      border-radius: 999px;
-      display: none;
-      z-index: 10000;
-      pointer-events: none;
+    .visnet-search-wrap {
+      position: relative;
+      flex: 1 1 220px;
+      max-width: 320px;
+      min-width: 180px;
+    }
+    .visnet-search-input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
       font-weight: 500;
-      font-size: 13.5px;
-      letter-spacing: 0.01em;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
-      backdrop-filter: blur(8px);
-      transition: opacity 0.4s ease;
+      font-family: inherit;
+      border: 1.5px solid #c7d2fe;
+      color: var(--blue-text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 12px center;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .visnet-search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+    }
+    .visnet-search-input::placeholder { color: #94a3b8; font-weight: 400; }
+    .visnet-search-results {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      max-height: 280px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      z-index: 2000;
+      list-style: none;
+      margin: 0;
+      padding: 4px 0;
+    }
+    .visnet-search-results.open { display: block; }
+    .visnet-search-results li {
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .visnet-search-results li:hover,
+    .visnet-search-results li.active {
+      background: var(--blue-soft);
+      color: var(--blue-text);
+    }
+    .visnet-search-results .result-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .visnet-search-results .result-type {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+    }
+    .visnet-search-empty {
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: #94a3b8;
     }
 
     .visnet-loading-spinner {
