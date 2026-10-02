@@ -429,7 +429,7 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 2-hop path. Use the search box or legend search to find someone. Click a link to highlight related nodes. Click empty space to reset.</p>
+    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 3-hop path. Use the search box or legend search to find someone. Click a link to highlight related nodes. Click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
@@ -550,10 +550,10 @@
       { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
     ];
 
-    // Colour palette
+    // Colour palette – people & venues stay distinct; tags get unique colours by sector
     const COLORS = {
-      person:  { background: '#FF6F61', border: '#D32F2F' },
-      venue:   { background: '#5C6BC0', border: '#3949AB' },
+      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
+      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
       edge:    'rgba(144, 164, 174, 0.42)'
     };
 
@@ -575,7 +575,7 @@
       'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Physics settings
+    // Fast-settling physics (high damping, low velocities, quick stabilisation)
     const CALM_PHYSICS = {
       enabled: true,
       solver: 'forceAtlas2Based',
@@ -679,7 +679,7 @@
         nodes[nodeMap[to]].edgeCount++;
       }
 
-      // Create entity nodes + extract tags
+      // 1. Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
         const eid = 'ent_' + idx;
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
@@ -715,7 +715,7 @@
         });
       });
 
-      // Size & mass by connectivity
+      // 2. Size & mass by connectivity
       nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 12 : 18;
         const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
@@ -724,7 +724,7 @@
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
       });
 
-      // Initial coordinates
+      // 3. Initial circular coordinates
       const total = nodes.length;
       const radius = 820;
       const step = total > 0 ? (2 * Math.PI) / total : 0;
@@ -775,7 +775,7 @@
 
       let network, nodesDS, edgesDS;
       let textCache = {};
-      let searchIndex = [];
+      let searchIndex = []; // { id, label, type, color }
 
       function unlock() {
         root.querySelectorAll('.visnet-btn, .visnet-select, .visnet-search-input').forEach(el => { el.disabled = false; });
@@ -894,7 +894,6 @@
 
       // Reset all highlights back to default state
       function resetHighlight() {
-        if (!nodesDS || !edgesDS) return;
         nodesDS.update(nodesDS.get().map(n => ({
           id: n.id,
           opacity: 1,
@@ -939,6 +938,7 @@
 
       // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
+        // Update nodes
         const nodeUpdates = nodesDS.get().map(n => {
           const isLit = litNodeIds.has(n.id);
           return {
@@ -949,6 +949,7 @@
         });
         nodesDS.update(nodeUpdates);
 
+        // Update edges
         const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
             return {
@@ -986,6 +987,7 @@
         nodesDS = new vis.DataSet(initial);
         edgesDS = new vis.DataSet(data.edges);
 
+        // Build search index
         searchIndex = data.nodes.map(n => ({
           id: n.id,
           label: n.externalLabel || n.label || n.id,
@@ -1046,11 +1048,42 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Click interaction: Node (2-hop), Link or Background
+        // Shared: highlight N-hop neighbourhood around a node
+        function highlightNodePath(selectedId, hops) {
+          const litNodeIds = new Set([selectedId]);
+          const litEdgeIds = new Set();
+          const adj = {};
+          edgesDS.get().forEach(e => {
+            if (!adj[e.from]) adj[e.from] = [];
+            if (!adj[e.to]) adj[e.to] = [];
+            adj[e.from].push({ node: e.to, edge: e.id });
+            adj[e.to].push({ node: e.from, edge: e.id });
+          });
+          const queue = [[selectedId, 0]];
+          while (queue.length) {
+            const [cur, depth] = queue.shift();
+            if (depth >= hops) continue;
+            for (const { node, edge } of (adj[cur] || [])) {
+              litEdgeIds.add(edge);
+              if (!litNodeIds.has(node)) {
+                litNodeIds.add(node);
+                queue.push([node, depth + 1]);
+              }
+            }
+          }
+          edgesDS.get().forEach(e => {
+            if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) litEdgeIds.add(e.id);
+          });
+          applyHighlight(litNodeIds, litEdgeIds, null);
+        }
+
+        // Click interaction: Node, Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            highlightNodePath(params.nodes[0], 2); // [CHANGED: 2 hops]
+            highlightNodePath(params.nodes[0], 3);
           } else if (params.edges.length > 0) {
+            // LINK CLICKED:
+            // Light up its connected nodes, PLUS all other nodes that connect to them!
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
             if (!clickedEdge) return;
@@ -1061,6 +1094,7 @@
             const litNodeIds = new Set([endpointA, endpointB]);
             const litEdgeIds = new Set([clickedEdgeId]);
 
+            // Scan all edges touching endpointA or endpointB
             edgesDS.get().forEach(e => {
               const touchesA = (e.from === endpointA || e.to === endpointA);
               const touchesB = (e.from === endpointB || e.to === endpointB);
@@ -1073,6 +1107,7 @@
 
             applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
           } else {
+            // Background clicked: Reset
             resetHighlight();
           }
         });
@@ -1084,10 +1119,9 @@
         if (fsControls) fsControls.style.display = isFullscreen() ? 'flex' : 'none';
       }
 
-      // Focus node from search (2-hop)
       function focusNode(id) {
         if (!network || !nodesDS.get(id)) return;
-        highlightNodePath(id, 2); // [CHANGED: 2 hops]
+        highlightNodePath(id, 3);
         network.focus(id, {
           scale: 1.15,
           animation: { duration: 450, easingFunction: 'easeInOutQuad' }
@@ -1320,23 +1354,8 @@
 
       // Event listeners
       function setupListeners() {
-        if (searchInput && searchResults) {
-          searchInput.addEventListener('input', e => runSearch(e.target.value, searchResults, false));
-          document.addEventListener('click', e => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-              searchResults.classList.remove('open');
-            }
-          });
-        }
-
-        if (legendEl) {
-          legendEl.addEventListener('input', e => {
-            if (e.target.classList.contains('visnet-legend-search')) {
-              const hitsEl = legendEl.querySelector('.visnet-legend-hits');
-              runSearch(e.target.value, hitsEl, true);
-            }
-          });
-        }
+        root.querySelectorAll('.visnet-toggle-physics-btn')
+            .forEach(b => b.addEventListener('click', togglePhysics));
 
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
@@ -1367,8 +1386,15 @@
         ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
           .forEach(e => document.addEventListener(e, handleFSChange));
 
+        document.addEventListener('keydown', e => {
+          if (e.code === 'Space' && isFullscreen()) {
+            e.preventDefault();
+            togglePhysics();
+          }
+        }, { passive: false });
+
         new ResizeObserver(() => {
-          if (network && !isFullscreen()) {
+          if (network && !isPhysicsEnabled && !isFullscreen()) {
             network.fit({ animation: true });
           }
         }).observe(container);
