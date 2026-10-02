@@ -94,7 +94,7 @@
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       opacity: 0;
-      animation: visnetFadeIn 0.4s ease forwards;
+      animation: visnetFadeIn 0.35s ease forwards;
     }
 
     .visnet-container:fullscreen,
@@ -180,11 +180,6 @@
     .visnet-select:hover:not(:disabled) {
       border-color: var(--blue);
       background-color: var(--blue-soft);
-    }
-
-    .visnet-select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
     }
 
     .visnet-fullscreen-btn { background: var(--blue); color: #fff; }
@@ -278,12 +273,15 @@
     .visnet-stats {
       text-align: center;
       margin-top: 12px;
-      font-size: 13px;
-      color: #64748b;
+      font-size: 13.5px;
+      color: #475569;
+      min-height: 24px;
     }
 
+    .visnet-stats strong { color: #0f172a; }
+
     @keyframes visnetFadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
@@ -314,7 +312,7 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network of artists, venues, and creative practices across Westmeath. <strong>Click any link</strong> to illuminate its connected nodes and all other nodes that share them. Click a node to view its immediate connections, or click empty canvas to reset.</p>
+    <p>Interactive graph of Westmeath's creative network. <strong>Click any node</strong> to trace and highlight its <em>complete path</em> through all connected tiers. Click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
@@ -486,15 +484,15 @@
         .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
 
-    // Build dataset
+    // Build dataset & adjacency list
     function buildGraph() {
       const nodes = [];
       const edges = [];
       const edgeKeys = new Set();
       const nodeMap = {};
       const tagIdMap = {};
-      const entityTagMap = {};
       const usedSectors = new Set();
+      const adjacency = {}; // id -> [{ edgeId, neighborId }]
 
       function addNode(id, label, type, color, extra = {}) {
         if (nodeMap[id] !== undefined) return id;
@@ -515,6 +513,7 @@
         };
         nodeMap[id] = nodes.length;
         nodes.push(n);
+        adjacency[id] = [];
         return id;
       }
 
@@ -534,6 +533,9 @@
         });
         nodes[nodeMap[from]].edgeCount++;
         nodes[nodeMap[to]].edgeCount++;
+
+        adjacency[from].push({ edgeId, neighborId: to });
+        adjacency[to].push({ edgeId, neighborId: from });
       }
 
       RAW.forEach((item, idx) => {
@@ -550,7 +552,6 @@
         });
 
         const tags = item.about.split(',').map(t => normTag(t)).filter(Boolean);
-        entityTagMap[eid] = [];
 
         tags.forEach(tag => {
           let tid = tagIdMap[tag];
@@ -566,12 +567,10 @@
               sector
             });
           }
-          entityTagMap[eid].push(tid);
           addEdge(eid, tid);
         });
       });
 
-      // Size by connectivity
       nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 12 : 18;
         const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 6.5 : 9);
@@ -579,7 +578,6 @@
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
       });
 
-      // Legend
       const legend = {
         'Artist / Organisation': COLORS.person.background,
         'Venue / Space': COLORS.venue.background
@@ -594,13 +592,19 @@
         if (usedSectors.has(s)) legend[s] = SECTOR_COLORS[s].background;
       });
 
-      return { nodes, edges, legend, stats: {
-        entities: RAW.length,
-        people: RAW.filter(r => r.kind === 'person').length,
-        venues: RAW.filter(r => r.kind === 'venue').length,
-        tags: Object.keys(tagIdMap).length,
-        connections: edges.length
-      }};
+      return {
+        nodes,
+        edges,
+        legend,
+        adjacency,
+        stats: {
+          entities: RAW.length,
+          people: RAW.filter(r => r.kind === 'person').length,
+          venues: RAW.filter(r => r.kind === 'venue').length,
+          tags: Object.keys(tagIdMap).length,
+          connections: edges.length
+        }
+      };
     }
 
     // ====================================================================
@@ -620,6 +624,8 @@
       let isCircularLayout = false;
       let textCache = {};
       let savedClusterPositions = {};
+      let adjGraph = {};
+      let activeRootId = null;
 
       function unlock() {
         root.querySelectorAll('.visnet-btn, .visnet-select').forEach(el => { el.disabled = false; });
@@ -636,7 +642,7 @@
                   document.mozFullScreenElement || document.msFullscreenElement);
       }
 
-      // Custom canvas labels
+      // Labels on canvas
       function drawLabels(ctx, net, nodesData, isExport = false) {
         ctx.save();
         ctx.textAlign = 'center';
@@ -662,11 +668,16 @@
           if (!n || !n.externalLabel) continue;
 
           const isDimmed = (n.opacity !== undefined && n.opacity < 0.5);
+          const isRoot = (activeRootId === n.id);
 
           if (isDimmed) {
-            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.lineWidth = isExport ? 3 : 0.5;
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.16)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = isExport ? 2.5 : 0.5;
+          } else if (isRoot) {
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = isExport ? 8 : 2;
           } else {
             ctx.fillStyle = '#1e293b';
             ctx.strokeStyle = '#fff';
@@ -726,7 +737,7 @@
           ly = pos[id].y + Math.sin(ang) * dist;
           const sy = ly - (cached.lines.length * (fontSize * 1.32) - fontSize * 1.32) / 2;
 
-          ctx.font = `${cached.fontSize}px Inter, sans-serif`;
+          ctx.font = `${isRoot ? 'bold ' : ''}${cached.fontSize}px Inter, sans-serif`;
           cached.lines.forEach((l, i) => {
             ctx.strokeText(l, lx, sy + i * (fontSize * 1.32));
             ctx.fillText(l, lx, sy + i * (fontSize * 1.32));
@@ -735,10 +746,18 @@
         ctx.restore();
       }
 
-      function resetHighlight() {
+      function updateDefaultStats(data) {
+        if (!statsEl || !data?.stats) return;
+        const s = data.stats;
+        statsEl.innerHTML = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
+      }
+
+      function resetHighlight(defaultStatsData) {
+        activeRootId = null;
         nodesDS.update(nodesDS.get().map(n => ({
           id: n.id,
           opacity: 1,
+          borderWidth: n.borderWidth || 1,
           color: n.originalColor
         })));
         edgesDS.update(edgesDS.get().map(e => ({
@@ -746,19 +765,66 @@
           width: e.originalWidth || 1.2,
           color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' }
         })));
+        updateDefaultStats(defaultStatsData);
       }
 
-      function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
+      // Complete Recursive Traversal (Breadth-First Search)
+      function getFullComponent(startNodeIds) {
+        const visitedNodes = new Set(startNodeIds);
+        const visitedEdges = new Set();
+        const directEdges = new Set();
+        const nodeDistances = new Map();
+
+        const queue = [];
+        startNodeIds.forEach(id => {
+          nodeDistances.set(id, 0);
+          queue.push(id);
+        });
+
+        while (queue.length > 0) {
+          const current = queue.shift();
+          const dist = nodeDistances.get(current);
+          const neighbors = adjGraph[current] || [];
+
+          for (let i = 0; i < neighbors.length; i++) {
+            const { edgeId, neighborId } = neighbors[i];
+            visitedEdges.add(edgeId);
+
+            if (dist === 0) {
+              directEdges.add(edgeId);
+            }
+
+            if (!visitedNodes.has(neighborId)) {
+              visitedNodes.add(neighborId);
+              nodeDistances.set(neighborId, dist + 1);
+              queue.push(neighborId);
+            }
+          }
+        }
+
+        return { visitedNodes, visitedEdges, directEdges, nodeDistances };
+      }
+
+      function applyCompletePathHighlight(visitedNodes, visitedEdges, directEdges, rootNodeId, primaryEdgeId) {
+        activeRootId = rootNodeId || null;
+
+        // Nodes
         const nodeUpdates = nodesDS.get().map(n => {
-          const isLit = litNodeIds.has(n.id);
+          const inPath = visitedNodes.has(n.id);
+          const isOrigin = (n.id === rootNodeId);
+
           return {
             id: n.id,
-            opacity: isLit ? 1 : 0.12,
-            color: isLit ? n.originalColor : { background: '#e2e8f0', border: '#cbd5e1' }
+            opacity: inPath ? 1 : 0.1,
+            borderWidth: isOrigin ? 3.5 : (n.borderWidth || 1),
+            color: inPath
+              ? (isOrigin ? { background: n.originalColor.background, border: '#1e3a8a' } : n.originalColor)
+              : { background: '#e2e8f0', border: '#cbd5e1' }
           };
         });
         nodesDS.update(nodeUpdates);
 
+        // Edges: clicked link > direct links > recursive downstream links > unconnected
         const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
             return {
@@ -766,17 +832,23 @@
               width: 3.8,
               color: { color: '#1a56db', highlight: '#1e40af', hover: '#1e40af' }
             };
-          } else if (litEdgeIds.has(e.id)) {
+          } else if (directEdges.has(e.id)) {
             return {
               id: e.id,
-              width: 2.0,
-              color: { color: 'rgba(59, 130, 246, 0.7)', highlight: '#2563eb', hover: '#2563eb' }
+              width: 2.4,
+              color: { color: 'rgba(26, 86, 219, 0.85)', highlight: '#1a56db', hover: '#1a56db' }
+            };
+          } else if (visitedEdges.has(e.id)) {
+            return {
+              id: e.id,
+              width: 1.5,
+              color: { color: 'rgba(59, 130, 246, 0.55)', highlight: '#2563eb', hover: '#2563eb' }
             };
           } else {
             return {
               id: e.id,
-              width: 0.8,
-              color: { color: 'rgba(203, 213, 225, 0.16)', highlight: 'rgba(203, 213, 225, 0.25)', hover: 'rgba(203, 213, 225, 0.25)' }
+              width: 0.6,
+              color: { color: 'rgba(203, 213, 225, 0.12)', highlight: 'rgba(203, 213, 225, 0.2)', hover: 'rgba(203, 213, 225, 0.2)' }
             };
           }
         });
@@ -785,10 +857,11 @@
 
       function render(data) {
         textCache = {};
+        adjGraph = data.adjacency;
         nodesDS = new vis.DataSet(data.nodes);
         edgesDS = new vis.DataSet(data.edges);
 
-        // Fast Quadtree BarnesHut solver -> completes quickly, then freezes!
+        // Instant barnesHut calculation + immediate freeze on settle
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
           physics: {
             enabled: true,
@@ -798,12 +871,12 @@
               centralGravity: 0.25,
               springLength: 95,
               springConstant: 0.05,
-              damping: 0.95,        // Extremely fast dampening
+              damping: 0.95,
               avoidOverlap: 0.4
             },
             stabilization: {
               enabled: true,
-              iterations: 120,      // Quick 120-step resolution
+              iterations: 120,
               updateInterval: 25,
               fit: true
             }
@@ -827,10 +900,9 @@
           }
         });
 
-        // LOCK POSITIONS IMMEDIATELY ONCE SETTLED (NO DRIFTING)
         function freezeAndFinish() {
           savedClusterPositions = network.getPositions();
-          network.setOptions({ physics: { enabled: false } }); // STOP physics loop completely
+          network.setOptions({ physics: { enabled: false } });
           if (spinner) spinner.style.display = 'none';
           unlock();
         }
@@ -838,7 +910,6 @@
         network.once('stabilizationIterationsDone', freezeAndFinish);
         network.once('stabilized', freezeAndFinish);
 
-        // Legend
         if (data.legend && legendEl) {
           let html = '<div class="legend-title">Legend</div>';
           for (const [type, color] of Object.entries(data.legend)) {
@@ -851,61 +922,42 @@
           legendEl.style.display = 'block';
         }
 
-        if (statsEl && data.stats) {
-          const s = data.stats;
-          statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
-        }
-
+        updateDefaultStats(data);
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Click Logic
+        // Click Handler: Node (full recursive path) or Link (full 2-way path)
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            // Node clicked: Light up node + direct connections
-            const selectedId = params.nodes[0];
-            const litNodeIds = new Set([selectedId]);
-            const litEdgeIds = new Set();
+            // Node clicked: Find COMPLETE path (all reachable nodes & connections across all tiers)
+            const rootId = params.nodes[0];
+            const rootNode = nodesDS.get(rootId);
+            const { visitedNodes, visitedEdges, directEdges, nodeDistances } = getFullComponent([rootId]);
 
-            edgesDS.get().forEach(e => {
-              if (e.from === selectedId) {
-                litNodeIds.add(e.to);
-                litEdgeIds.add(e.id);
-              } else if (e.to === selectedId) {
-                litNodeIds.add(e.from);
-                litEdgeIds.add(e.id);
-              }
-            });
+            applyCompletePathHighlight(visitedNodes, visitedEdges, directEdges, rootId, null);
 
-            applyHighlight(litNodeIds, litEdgeIds, null);
+            if (statsEl) {
+              const maxHops = Math.max(...Array.from(nodeDistances.values()));
+              statsEl.innerHTML = `<strong>${decodeEntities(rootNode.externalLabel)}</strong>: Complete path illuminates <strong>${visitedNodes.size}</strong> nodes and <strong>${visitedEdges.size}</strong> connections across <strong>${maxHops}</strong> degrees of separation. <a href="javascript:void(0)" id="reset-path-btn" style="color:var(--blue);margin-left:8px;font-weight:600;text-decoration:underline;">Reset</a>`;
+              document.getElementById('reset-path-btn')?.addEventListener('click', () => resetHighlight(data));
+            }
 
           } else if (params.edges.length > 0) {
-            // LINK CLICKED:
-            // Light up its 2 endpoints AND all nodes connected to either endpoint!
-            const clickedEdgeId = params.edges[0];
-            const clickedEdge = edgesDS.get(clickedEdgeId);
-            if (!clickedEdge) return;
+            // Link clicked: Find complete path from both endpoints
+            const edgeId = params.edges[0];
+            const edge = edgesDS.get(edgeId);
+            if (!edge) return;
 
-            const endpointA = clickedEdge.from;
-            const endpointB = clickedEdge.to;
+            const { visitedNodes, visitedEdges, directEdges } = getFullComponent([edge.from, edge.to]);
+            applyCompletePathHighlight(visitedNodes, visitedEdges, directEdges, null, edgeId);
 
-            const litNodeIds = new Set([endpointA, endpointB]);
-            const litEdgeIds = new Set([clickedEdgeId]);
-
-            edgesDS.get().forEach(e => {
-              const touchesA = (e.from === endpointA || e.to === endpointA);
-              const touchesB = (e.from === endpointB || e.to === endpointB);
-              if (touchesA || touchesB) {
-                litNodeIds.add(e.from);
-                litNodeIds.add(e.to);
-                litEdgeIds.add(e.id);
-              }
-            });
-
-            applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
+            if (statsEl) {
+              statsEl.innerHTML = `Link complete path: <strong>${visitedNodes.size}</strong> nodes and <strong>${visitedEdges.size}</strong> connections illuminated. <a href="javascript:void(0)" id="reset-path-btn" style="color:var(--blue);margin-left:8px;font-weight:600;text-decoration:underline;">Reset</a>`;
+              document.getElementById('reset-path-btn')?.addEventListener('click', () => resetHighlight(data));
+            }
 
           } else {
-            // Empty space clicked: Reset
-            resetHighlight();
+            // Clicked empty background: Reset
+            resetHighlight(data);
           }
         });
 
@@ -916,7 +968,9 @@
         if (!network || !nodesDS) return;
         isCircularLayout = !isCircularLayout;
 
-        const label = isCircularLayout ? '<i class="fas fa-project-diagram"></i> Clustered Layout' : '<i class="fas fa-circle-notch"></i> Circular Layout';
+        const label = isCircularLayout
+          ? '<i class="fas fa-project-diagram"></i> Clustered Layout'
+          : '<i class="fas fa-circle-notch"></i> Circular Layout';
         root.querySelectorAll('.visnet-toggle-physics-btn').forEach(b => { b.innerHTML = label; });
 
         if (isCircularLayout) {
