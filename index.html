@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Westmeath Arts & Creative Network</title>
+  <title>Westmeath Arts &amp; Creative Network</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
@@ -265,6 +265,8 @@
       backdrop-filter: blur(6px);
       border: 1px solid var(--border);
       min-width: 150px;
+      max-height: 55vh;
+      overflow-y: auto;
     }
 
     .visnet-legend .legend-title {
@@ -344,7 +346,7 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive map of artists, organisations, venues and shared practices across Westmeath. Click a node to highlight connections. Use physics / circular layout, fullscreen and high-res A1 export.</p>
+    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a link</strong> to illuminate the connected nodes and all other nodes that share them. Click a node to view its immediate circle, or click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
@@ -471,30 +473,51 @@
 
     // Colour palette – people & venues stay distinct; tags get unique colours by sector
     const COLORS = {
-      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral – artists/orgs
-      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo – venues
+      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
+      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
       edge:    'rgba(144, 164, 174, 0.42)'
     };
 
-    // Sector → colour (unique hues for skills/practices)
+    // Sector → colour
     const SECTOR_COLORS = {
-      'Visual Art':          { background: '#E91E63', border: '#C2185B' }, // pink/magenta
-      'Craft & Making':      { background: '#FF9800', border: '#F57C00' }, // amber
-      'Performing Arts':     { background: '#9C27B0', border: '#7B1FA2' }, // purple
-      'Music':               { background: '#00BCD4', border: '#0097A7' }, // cyan
-      'Literature & Words':  { background: '#8BC34A', border: '#689F38' }, // light green
-      'Community & Education': { background: '#FFEB3B', border: '#F9A825' }, // yellow
-      'Heritage & Museums':  { background: '#795548', border: '#5D4037' }, // brown
-      'Media & Broadcast':   { background: '#607D8B', border: '#455A64' }, // blue-grey
-      'Events & Festivals':  { background: '#F44336', border: '#D32F2F' }, // red
-      'Dance':               { background: '#EC407A', border: '#C2185B' }, // deep pink
-      'Film & Screen':       { background: '#26A69A', border: '#00897B' }, // teal
-      'Public & Outdoor':    { background: '#66BB6A', border: '#43A047' }, // green
-      'Enterprise & Admin':  { background: '#7E57C2', border: '#5E35B1' }, // deep purple
-      'Other':               { background: '#90A4AE', border: '#607D8B' }  // grey
+      'Visual Art':          { background: '#E91E63', border: '#C2185B' },
+      'Craft & Making':      { background: '#FF9800', border: '#F57C00' },
+      'Performing Arts':     { background: '#9C27B0', border: '#7B1FA2' },
+      'Music':               { background: '#00BCD4', border: '#0097A7' },
+      'Literature & Words':  { background: '#8BC34A', border: '#689F38' },
+      'Community & Education': { background: '#FFEB3B', border: '#F9A825' },
+      'Heritage & Museums':  { background: '#795548', border: '#5D4037' },
+      'Media & Broadcast':   { background: '#607D8B', border: '#455A64' },
+      'Events & Festivals':  { background: '#F44336', border: '#D32F2F' },
+      'Dance':               { background: '#EC407A', border: '#C2185B' },
+      'Film & Screen':       { background: '#26A69A', border: '#00897B' },
+      'Public & Outdoor':    { background: '#66BB6A', border: '#43A047' },
+      'Enterprise & Admin':  { background: '#7E57C2', border: '#5E35B1' },
+      'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Map individual tags → sector
+    // Calmer, gentler physics configuration (High damping, fast settling, minimal drift)
+    const CALM_PHYSICS = {
+      enabled: true,
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant: -40,
+        centralGravity: 0.018,
+        springLength: 135,
+        springConstant: 0.08,
+        damping: 0.88,         // High damping eliminates oscillating bounce
+        avoidOverlap: 0.85
+      },
+      minVelocity: 0.75,       // Stops simulation quickly once settled
+      maxVelocity: 28,         // Prevents explosive sudden movements
+      stabilization: {
+        enabled: true,
+        iterations: 400,       // Computes layout off-screen before reveal
+        updateInterval: 50,
+        fit: true
+      }
+    };
+
     function getSector(tag) {
       const t = tag.toLowerCase();
       if (/visual art|painting|oil painting|drawing|illustration|gallery|exhibitions|public art|installation|murals|sign writing|cyanotype|2d animation|contemporary visual|mixed media|children.?s art|eco art|natural dyes|artist studio|creative workspace|atrium|sculpture/.test(t)) return 'Visual Art';
@@ -513,12 +536,8 @@
       return 'Other';
     }
 
-    // Normalise tag text
     function normTag(s) {
-      return s.toLowerCase()
-        .replace(/[’']/g, "'")
-        .replace(/\s+/g, ' ')
-        .trim();
+      return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
     function decodeEntities(txt) {
@@ -533,9 +552,9 @@
       const nodes = [];
       const edges = [];
       const edgeKeys = new Set();
-      const nodeMap = {};          // id -> index
-      const tagIdMap = {};         // normalised tag -> node id
-      const entityTagMap = {};     // entity id -> [tag ids]
+      const nodeMap = {};
+      const tagIdMap = {};
+      const entityTagMap = {};
       const usedSectors = new Set();
 
       function addNode(id, label, type, color, extra = {}) {
@@ -547,11 +566,13 @@
           title: extra.title || label,
           edgeCount: 0,
           color,
+          originalColor: color,
           nodeType: type,
           shape: 'dot',
           size: type === 'tag' ? 14 : 22,
           borderWidth: 1,
           mass: 1,
+          opacity: 1,
           ...extra
         };
         nodeMap[id] = nodes.length;
@@ -564,14 +585,23 @@
         const ek = from < to ? from + '|' + to : to + '|' + from;
         if (edgeKeys.has(ek)) return;
         edgeKeys.add(ek);
-        edges.push({ from, to, arrows: '', color: COLORS.edge, width: 1.2 });
+        const edgeId = 'e_' + edges.length;
+        edges.push({
+          id: edgeId,
+          from,
+          to,
+          arrows: '',
+          color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' },
+          width: 1.2,
+          originalWidth: 1.2
+        });
         nodes[nodeMap[from]].edgeCount++;
         nodes[nodeMap[to]].edgeCount++;
       }
 
       // 1. Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
-        const eid = 'e_' + idx;
+        const eid = 'ent_' + idx;
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
         const typeLabel = item.kind === 'person' ? 'Artist / Organisation' : 'Venue / Space';
         const contactLine = item.contact ? `\nContact: ${item.contact}` : '';
@@ -589,7 +619,7 @@
         tags.forEach(tag => {
           let tid = tagIdMap[tag];
           if (!tid) {
-            tid = 't_' + Object.keys(tagIdMap).length;
+            tid = 'tag_' + Object.keys(tagIdMap).length;
             tagIdMap[tag] = tid;
             const sector = getSector(tag);
             usedSectors.add(sector);
@@ -614,7 +644,7 @@
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
       });
 
-      // 3. Initial circular layout (used when physics off)
+      // 3. Initial circular coordinates
       const total = nodes.length;
       const radius = 820;
       const step = total > 0 ? (2 * Math.PI) / total : 0;
@@ -624,12 +654,11 @@
         n.fixed = { x: true, y: true };
       });
 
-      // Legend: people + venues + each used sector
+      // Legend
       const legend = {
         'Artist / Organisation': COLORS.person.background,
         'Venue / Space': COLORS.venue.background
       };
-      // Stable order for sectors
       const sectorOrder = [
         'Visual Art', 'Craft & Making', 'Performing Arts', 'Music', 'Dance',
         'Literature & Words', 'Community & Education', 'Heritage & Museums',
@@ -685,14 +714,11 @@
                   document.mozFullScreenElement || document.msFullscreenElement);
       }
 
-      // ---------- Custom labels (adapted from VisNet) ----------
+      // Custom node labels
       function drawLabels(ctx, net, nodesData, isExport = false) {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#1e293b';
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = isExport ? 6.5 : 0.7;
         if (isExport) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
@@ -701,7 +727,6 @@
         const pos = net.getPositions();
         const fs  = isFullscreen() || isExport;
 
-        // Protect a zone around highly-connected hubs so labels don’t collide
         const hubs = [];
         for (const id in pos) {
           const n = nodesData.get(id);
@@ -713,6 +738,18 @@
         for (const id in pos) {
           const n = nodesData.get(id);
           if (!n || !n.externalLabel) continue;
+
+          const isDimmed = (n.opacity !== undefined && n.opacity < 0.5);
+
+          if (isDimmed) {
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.22)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = isExport ? 3 : 0.5;
+          } else {
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = isExport ? 6.5 : 0.8;
+          }
 
           let fontSize, padding;
           if (n.nodeType === 'tag') {
@@ -755,7 +792,6 @@
           const ang  = Math.atan2(pos[id].y, pos[id].x);
           let dist = n.size + padding + (n.size / 2.2);
 
-          // Push label outward if it would land inside a hub zone
           let lx = pos[id].x + Math.cos(ang) * dist;
           let ly = pos[id].y + Math.sin(ang) * dist;
           hubs.forEach(h => {
@@ -777,7 +813,59 @@
         ctx.restore();
       }
 
-      // ---------- Render ----------
+      // Reset all highlights back to default state
+      function resetHighlight() {
+        nodesDS.update(nodesDS.get().map(n => ({
+          id: n.id,
+          opacity: 1,
+          color: n.originalColor
+        })));
+        edgesDS.update(edgesDS.get().map(e => ({
+          id: e.id,
+          width: e.originalWidth || 1.2,
+          color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' }
+        })));
+      }
+
+      // Apply network highlighting
+      function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
+        // Update nodes
+        const nodeUpdates = nodesDS.get().map(n => {
+          const isLit = litNodeIds.has(n.id);
+          return {
+            id: n.id,
+            opacity: isLit ? 1 : 0.12,
+            color: isLit ? n.originalColor : { background: '#e2e8f0', border: '#cbd5e1' }
+          };
+        });
+        nodesDS.update(nodeUpdates);
+
+        // Update edges
+        const edgeUpdates = edgesDS.get().map(e => {
+          if (primaryEdgeId && e.id === primaryEdgeId) {
+            return {
+              id: e.id,
+              width: 3.5,
+              color: { color: '#1a56db', highlight: '#1e40af', hover: '#1e40af' }
+            };
+          } else if (litEdgeIds.has(e.id)) {
+            return {
+              id: e.id,
+              width: 2.0,
+              color: { color: 'rgba(59, 130, 246, 0.65)', highlight: '#2563eb', hover: '#2563eb' }
+            };
+          } else {
+            return {
+              id: e.id,
+              width: 0.8,
+              color: { color: 'rgba(203, 213, 225, 0.18)', highlight: 'rgba(203, 213, 225, 0.25)', hover: 'rgba(203, 213, 225, 0.25)' }
+            };
+          }
+        });
+        edgesDS.update(edgeUpdates);
+      }
+
+      // Render network
       function render(data) {
         textCache = {};
 
@@ -794,23 +882,11 @@
         edgesDS = new vis.DataSet(data.edges);
 
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
-          physics: {
-            enabled: isPhysicsEnabled,
-            solver: 'forceAtlas2Based',
-            forceAtlas2Based: {
-              gravitationalConstant: -48,
-              centralGravity: 0.012,
-              springLength: 140,
-              springConstant: 0.06,
-              damping: 0.55,
-              avoidOverlap: 0.7
-            },
-            stabilization: { iterations: 180, updateInterval: 25 }
-          },
+          physics: CALM_PHYSICS,
           nodes: {
             shape: 'dot',
-            shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.18)' },
-            font: { size: 0 }   // we draw labels ourselves
+            shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.14)' },
+            font: { size: 0 }
           },
           edges: {
             smooth: { type: 'continuous', roundness: 0.35 },
@@ -856,36 +932,53 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Highlight connected nodes on click
+        // Click interaction: Node, Link or Background
         network.on('click', params => {
-          if (params.nodes.length) {
+          if (params.nodes.length > 0) {
+            // Node clicked: Light up this node + its immediate neighbours
             const selectedId = params.nodes[0];
-            const connected = new Set([selectedId]);
+            const litNodeIds = new Set([selectedId]);
+            const litEdgeIds = new Set();
+
             edgesDS.get().forEach(e => {
-              if (e.from === selectedId) connected.add(e.to);
-              if (e.to === selectedId) connected.add(e.from);
-            });
-            const updates = nodesDS.getIds().map(id => ({
-              id,
-              opacity: connected.has(id) ? 1 : 0.18,
-              color: connected.has(id)
-                ? undefined
-                : { background: '#cbd5e1', border: '#94a3b8' }
-            }));
-            // Restore original colours for connected
-            nodesDS.get().forEach(n => {
-              if (connected.has(n.id)) {
-                updates.find(u => u.id === n.id).color = n.color;
+              if (e.from === selectedId) {
+                litNodeIds.add(e.to);
+                litEdgeIds.add(e.id);
+              } else if (e.to === selectedId) {
+                litNodeIds.add(e.from);
+                litEdgeIds.add(e.id);
               }
             });
-            nodesDS.update(updates);
+
+            applyHighlight(litNodeIds, litEdgeIds, null);
+          } else if (params.edges.length > 0) {
+            // LINK CLICKED:
+            // Light up its connected nodes, PLUS all other nodes that connect to them!
+            const clickedEdgeId = params.edges[0];
+            const clickedEdge = edgesDS.get(clickedEdgeId);
+            if (!clickedEdge) return;
+
+            const endpointA = clickedEdge.from;
+            const endpointB = clickedEdge.to;
+
+            const litNodeIds = new Set([endpointA, endpointB]);
+            const litEdgeIds = new Set([clickedEdgeId]);
+
+            // Scan all edges touching endpointA or endpointB
+            edgesDS.get().forEach(e => {
+              const touchesA = (e.from === endpointA || e.to === endpointA);
+              const touchesB = (e.from === endpointB || e.to === endpointB);
+              if (touchesA || touchesB) {
+                litNodeIds.add(e.from);
+                litNodeIds.add(e.to);
+                litEdgeIds.add(e.id);
+              }
+            });
+
+            applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
           } else {
-            // Reset
-            nodesDS.update(nodesDS.get().map(n => ({
-              id: n.id,
-              opacity: 1,
-              color: n.color
-            })));
+            // Background clicked: Reset
+            resetHighlight();
           }
         });
 
@@ -919,20 +1012,7 @@
         });
 
         if (isPhysicsEnabled) {
-          network.setOptions({
-            physics: {
-              enabled: true,
-              solver: 'forceAtlas2Based',
-              forceAtlas2Based: {
-                gravitationalConstant: -48,
-                centralGravity: 0.012,
-                springLength: 140,
-                springConstant: 0.06,
-                damping: 0.55,
-                avoidOverlap: 0.7
-              }
-            }
-          });
+          network.setOptions({ physics: CALM_PHYSICS });
           nodesDS.update(nodesDS.getIds().map(id => ({ id, fixed: false })));
         } else {
           network.setOptions({ physics: { enabled: false } });
@@ -963,7 +1043,7 @@
         }
       }
 
-      // ---------- High-res A1 Export (modelled on VisNet) ----------
+      // High-res A1 Export
       async function exportPoster(format) {
         if (!network) return;
         const isPDF = format === 'pdf';
@@ -1033,9 +1113,14 @@
               x: positions[n.id]?.x || 0,
               y: positions[n.id]?.y || 0,
               fixed: true,
-              opacity: 1
+              opacity: 1,
+              color: n.originalColor || n.color
             }))),
-            edges: new vis.DataSet(edgesDS.get())
+            edges: new vis.DataSet(edgesDS.get().map(e => ({
+              ...e,
+              width: e.originalWidth || 1.2,
+              color: { color: COLORS.edge }
+            })))
           };
 
           expNet = new vis.Network(expContainer, expData, {
@@ -1070,7 +1155,7 @@
           posterCanvas.height = posterH;
           const ctx = posterCanvas.getContext('2d', { alpha: false });
 
-          // Base
+          // Background
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, posterW, posterH);
 
@@ -1101,12 +1186,12 @@
           // Graph
           ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
 
-          // Outer frame
+          // Frame
           ctx.strokeStyle = 'rgba(15,23,42,0.18)';
           ctx.lineWidth = 4;
           ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
 
-          // Small footer title
+          // Footer caption
           ctx.fillStyle = 'rgba(15,23,42,0.45)';
           ctx.font = '28px Inter, sans-serif';
           ctx.textAlign = 'center';
@@ -1144,14 +1229,14 @@
         }
       }
 
-      // ---------- Event listeners ----------
+      // Event listeners
       function setupListeners() {
         root.querySelectorAll('.visnet-toggle-physics-btn')
             .forEach(b => b.addEventListener('click', togglePhysics));
 
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
-            if (network) network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
+            if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
           });
         });
 
@@ -1192,7 +1277,7 @@
         }).observe(container);
       }
 
-      // ---------- Start ----------
+      // Start
       try {
         if (typeof vis === 'undefined') {
           showError('vis-network library failed to load.');
