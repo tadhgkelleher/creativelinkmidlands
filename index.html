@@ -25,7 +25,7 @@
       --paper: #f7f3ee;
       --paper-deep: #efe8df;
       --bg: #faf7f3;
-      --grid: rgba(196, 92, 38, 0.05);
+      --grid: rgba(196, 92, 38, 0.04);
       --border: rgba(74, 55, 40, 0.1);
       --shadow-sm: 0 1px 2px rgba(74, 55, 40, 0.04), 0 1px 3px rgba(74, 55, 40, 0.03);
       --shadow-md: 0 4px 14px -3px rgba(74, 55, 40, 0.08), 0 2px 6px -1px rgba(74, 55, 40, 0.04);
@@ -150,10 +150,9 @@
       position: relative;
       background-color: var(--bg);
       background-image:
-        radial-gradient(circle at 50% 45%, rgba(255,255,255,0.95) 0%, transparent 70%),
         linear-gradient(var(--grid) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 100% 100%, 36px 36px, 36px 36px;
+      background-size: 36px 36px, 36px 36px;
       border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: var(--shadow-lg);
@@ -560,7 +559,6 @@
     // DATA – people, organisations & venues with tags
     // ====================================================================
     const RAW = [
-      // People / organisations
       { name: "Gateway Youth Project UBU", about: "youth, community, education", contact: "Shelly Dunican", kind: "person" },
       { name: "Barbara – Art Box", about: "visual art, children’s art, workshops, mixed media, DIY", contact: "Barbara", kind: "person" },
       { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
@@ -581,7 +579,6 @@
       { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
       { name: "Tadhg Kelleher", about: "music, art, history, heritage, events", contact: "Tadhg Kelleher", kind: "person" },
 
-      // Venues / spaces / organisations
       { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
       { name: "Abbey Road Artists' Studios", about: "artist studios, visual art, creative workspace, exhibitions, workshops, community arts", contact: "", kind: "venue" },
       { name: "Abbey Road Community Space", about: "exhibitions, workshops, classes, talks, community and creative projects", contact: "", kind: "venue" },
@@ -629,14 +626,12 @@
       { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
     ];
 
-    // Colour palette – people & venues stay distinct; tags get unique colours by sector
     const COLORS = {
-      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
-      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
-      edge:    'rgba(144, 164, 174, 0.42)'
+      person:  { background: '#FF6F61', border: '#D32F2F' },
+      venue:   { background: '#5C6BC0', border: '#3949AB' },
+      edge:    'rgba(144, 164, 174, 0.40)'
     };
 
-    // Sector → colour
     const SECTOR_COLORS = {
       'Visual Art':          { background: '#E91E63', border: '#C2185B' },
       'Craft & Making':      { background: '#FF9800', border: '#F57C00' },
@@ -654,24 +649,21 @@
       'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Fast-settling physics (high damping, low velocities, quick stabilisation)
-    const CALM_PHYSICS = {
+    // Spacious organic layout with strong repulsion & low central tension
+    const ORGANIC_PHYSICS = {
       enabled: true,
-      solver: 'forceAtlas2Based',
-      forceAtlas2Based: {
-        gravitationalConstant: -32,
-        centralGravity: 0.015,
-        springLength: 140,
-        springConstant: 0.07,
-        damping: 0.97,
-        avoidOverlap: 0.85
+      solver: 'barnesHut',
+      barnesHut: {
+        gravitationalConstant: -18000, // Strong repulsion pushes clusters wide open
+        centralGravity: 0.03,          // Low gravity allows nodes to spread across the full canvas
+        springLength: 210,             // Spacious link lengths between connected nodes
+        springConstant: 0.018,         // Gentle spring tension prevents tight knotting
+        damping: 0.14,
+        avoidOverlap: 0.8              // Strong clearance between adjacent nodes
       },
-      minVelocity: 2.5,
-      maxVelocity: 10,
-      timestep: 0.45,
       stabilization: {
         enabled: true,
-        iterations: 280,
+        iterations: 420,
         updateInterval: 25,
         fit: true
       }
@@ -699,9 +691,7 @@
       return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
-    // Merge near-duplicate skill labels into a single canonical tag
     const TAG_MERGE = {
-      // Community family
       'community': 'community arts',
       'community activity': 'community arts',
       'community and creative projects': 'community arts',
@@ -714,47 +704,34 @@
       'culture': 'community arts',
       'community and cultural events': 'community events',
       'community events': 'community events',
-      // Cultural events family
       'cultural activity': 'cultural events',
       'multidisciplinary cultural activity': 'cultural events',
       'outdoor cultural activity': 'outdoor events',
       'outdoor cultural events': 'outdoor events',
-      // Visual art family
       'art': 'visual art',
       'arts': 'visual art',
       'contemporary visual art': 'visual art',
       'multidisciplinary arts': 'visual art',
-      // Exhibitions
       'public exhibitions': 'exhibitions',
-      // Heritage / history
       'history': 'heritage',
       'local history': 'heritage',
       'cultural heritage': 'heritage',
       'military heritage': 'heritage',
-      // Workshops / classes
       'classes': 'workshops',
-      // Music
       'community music': 'music',
       'youth music': 'music',
-      // Performance / theatre
       'drama': 'theatre',
-      // Studios
       'artist studio': 'artist studios',
-      // Programming
       'arts programming': 'cultural programming',
       'public programming': 'cultural programming',
-      // Broadcast
       'broadcasting history': 'broadcasting',
       'radio heritage': 'broadcasting',
       'athlone/moydrum transmission history': 'broadcasting',
-      // Photography
       'photography community': 'photography',
-      // Craft
       'traditional craft': 'craft',
       'irish craft': 'craft',
       'irish-made work': 'craft',
       'craft production': 'craft',
-      // Misc
       'artists': 'artists and organisations',
       'creative studios': 'artist studios',
       'creative workspace': 'artist studios'
@@ -771,7 +748,6 @@
         .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
 
-    // Build graph data
     function buildGraph() {
       const nodes = [];
       const edges = [];
@@ -823,7 +799,6 @@
         nodes[nodeMap[to]].edgeCount++;
       }
 
-      // 1. Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
         const eid = 'ent_' + idx;
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
@@ -840,7 +815,6 @@
         const tags = item.about.split(',')
           .map(t => mergeTag(normTag(t)))
           .filter(Boolean);
-        // Deduplicate after merge (same entity may map to same canonical tag twice)
         const uniqueTags = [...new Set(tags)];
         entityTagMap[eid] = [];
 
@@ -863,16 +837,14 @@
         });
       });
 
-      // 2. Size & mass by connectivity
       nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 12 : 18;
-        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
-        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, size);
-        n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
+        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 6 : 9);
+        n.size = Math.min(n.nodeType === 'tag' ? 34 : 48, size);
+        n.mass = Math.max(1, Math.sqrt(n.edgeCount) * (n.nodeType === 'tag' ? 1.0 : 1.4));
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
       });
 
-      // Legend
       const legend = {
         'Artist / Organisation': COLORS.person.background,
         'Venue / Space': COLORS.venue.background
@@ -896,9 +868,6 @@
       }};
     }
 
-    // ====================================================================
-    // UI & NETWORK
-    // ====================================================================
     document.addEventListener('DOMContentLoaded', function () {
       const root = document.getElementById('visnet-root');
       if (!root) return;
@@ -913,7 +882,7 @@
 
       let network, nodesDS, edgesDS;
       let textCache = {};
-      let searchIndex = []; // { id, label, type, color }
+      let searchIndex = [];
 
       function unlock() {
         root.querySelectorAll('.visnet-btn, .visnet-select, .visnet-search-input').forEach(el => { el.disabled = false; });
@@ -931,11 +900,10 @@
                   document.mozFullScreenElement || document.msFullscreenElement);
       }
 
-      // Custom node labels
       function drawLabels(ctx, net, nodesData, isExport = false) {
         ctx.save();
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textBaseline = 'top';
         if (isExport) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
@@ -943,14 +911,6 @@
 
         const pos = net.getPositions();
         const fs  = isFullscreen() || isExport;
-
-        const hubs = [];
-        for (const id in pos) {
-          const n = nodesData.get(id);
-          if (n && n.edgeCount >= 8) {
-            hubs.push({ x: pos[id].x, y: pos[id].y, r: (n.size || 20) + (fs ? 95 : 70) });
-          }
-        }
 
         for (const id in pos) {
           const n = nodesData.get(id);
@@ -968,17 +928,14 @@
             ctx.lineWidth = isExport ? 6.5 : 0.8;
           }
 
-          let fontSize, padding;
+          let fontSize;
           if (n.nodeType === 'tag') {
-            padding = 28;
-            fontSize = fs ? (isExport ? 18 : 15) : 11;
+            fontSize = fs ? (isExport ? 17 : 14) : 11;
           } else if (n.edgeCount <= 2) {
-            padding = 36;
-            fontSize = fs ? (isExport ? 20 : 16) : 12;
+            fontSize = fs ? (isExport ? 19 : 15) : 12;
           } else {
-            padding = 48;
-            const base = fs ? (isExport ? 22 : 18) : 13;
-            fontSize = Math.max(fs ? (isExport ? 18 : 15) : 12, base + (16 * ((n.size - 18) / 34)));
+            const base = fs ? (isExport ? 21 : 17) : 13;
+            fontSize = Math.max(fs ? (isExport ? 17 : 14) : 12, base + (14 * ((n.size - 18) / 34)));
           }
 
           if (!textCache[id] || textCache[id].fontSize !== fontSize) {
@@ -991,7 +948,7 @@
             const lines = [];
             let cur = '';
             ctx.font = `${fontSize}px Inter, sans-serif`;
-            const wrap = fs ? 130 : 85;
+            const wrap = fs ? 120 : 85;
 
             for (let i = 0; i < words.length; i++) {
               if (ctx.measureText(cur + words[i] + ' ').width > wrap && i > 0) {
@@ -1006,31 +963,20 @@
           }
 
           const cached = textCache[id];
-          const ang  = Math.atan2(pos[id].y, pos[id].x);
-          let dist = n.size + padding + (n.size / 2.2);
-
-          let lx = pos[id].x + Math.cos(ang) * dist;
-          let ly = pos[id].y + Math.sin(ang) * dist;
-          hubs.forEach(h => {
-            const dx = lx - h.x, dy = ly - h.y;
-            const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < h.r) dist += (h.r - d) + 18;
-          });
-
-          lx = pos[id].x + Math.cos(ang) * dist;
-          ly = pos[id].y + Math.sin(ang) * dist;
-          const sy = ly - (cached.lines.length * (fontSize * 1.32) - fontSize * 1.32) / 2;
+          const lx = pos[id].x;
+          const ly = pos[id].y + (n.size || 18) + (fs ? 8 : 6);
+          const lineHeight = cached.fontSize * 1.25;
 
           ctx.font = `${cached.fontSize}px Inter, sans-serif`;
           cached.lines.forEach((l, i) => {
-            ctx.strokeText(l, lx, sy + i * (fontSize * 1.32));
-            ctx.fillText(l, lx, sy + i * (fontSize * 1.32));
+            const lineY = ly + i * lineHeight;
+            ctx.strokeText(l, lx, lineY);
+            ctx.fillText(l, lx, lineY);
           });
         }
         ctx.restore();
       }
 
-      // Reset all highlights back to default state
       function resetHighlight() {
         nodesDS.update(nodesDS.get().map(n => ({
           id: n.id,
@@ -1044,7 +990,6 @@
         })));
       }
 
-      // Highlight N-hop neighbourhood around a node
       function highlightNodePath(selectedId, hops) {
         if (!edgesDS || !nodesDS) return;
         const litNodeIds = new Set([selectedId]);
@@ -1074,9 +1019,7 @@
         applyHighlight(litNodeIds, litEdgeIds, null);
       }
 
-      // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
-        // Update nodes
         const nodeUpdates = nodesDS.get().map(n => {
           const isLit = litNodeIds.has(n.id);
           return {
@@ -1087,7 +1030,6 @@
         });
         nodesDS.update(nodeUpdates);
 
-        // Update edges
         const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
             return {
@@ -1112,14 +1054,11 @@
         edgesDS.update(edgeUpdates);
       }
 
-      // Render network
       function render(data) {
         textCache = {};
-
         nodesDS = new vis.DataSet(data.nodes);
         edgesDS = new vis.DataSet(data.edges);
 
-        // Build search index
         searchIndex = data.nodes.map(n => ({
           id: n.id,
           label: n.externalLabel || n.label || n.id,
@@ -1128,7 +1067,7 @@
         })).sort((a, b) => a.label.localeCompare(b.label));
 
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
-          physics: CALM_PHYSICS,
+          physics: ORGANIC_PHYSICS,
           nodes: {
             shape: 'dot',
             shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.14)' },
@@ -1157,7 +1096,6 @@
           unlock();
         });
 
-        // Legend + embedded search
         if (data.legend && legendEl) {
           let html = '<input type="search" class="visnet-legend-search" placeholder="Search…" aria-label="Search in legend" autocomplete="off" />';
           html += '<ul class="visnet-legend-hits"></ul>';
@@ -1172,7 +1110,6 @@
           legendEl.style.display = 'block';
         }
 
-        // Stats
         if (statsEl && data.stats) {
           const s = data.stats;
           statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
@@ -1180,13 +1117,10 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
-        // Click interaction: Node, Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
             highlightNodePath(params.nodes[0], 2);
           } else if (params.edges.length > 0) {
-            // LINK CLICKED:
-            // Light up its connected nodes, PLUS all other nodes that connect to them!
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
             if (!clickedEdge) return;
@@ -1197,7 +1131,6 @@
             const litNodeIds = new Set([endpointA, endpointB]);
             const litEdgeIds = new Set([clickedEdgeId]);
 
-            // Scan all edges touching endpointA or endpointB
             edgesDS.get().forEach(e => {
               const touchesA = (e.from === endpointA || e.to === endpointA);
               const touchesB = (e.from === endpointB || e.to === endpointB);
@@ -1210,7 +1143,6 @@
 
             applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
           } else {
-            // Background clicked: Reset
             resetHighlight();
           }
         });
@@ -1226,7 +1158,7 @@
         if (!network || !nodesDS.get(id)) return;
         highlightNodePath(id, 2);
         network.focus(id, {
-          scale: 1.15,
+          scale: 1.0,
           animation: { duration: 450, easingFunction: 'easeInOutQuad' }
         });
       }
@@ -1269,7 +1201,6 @@
         });
       }
 
-      // High-res A1 Export
       async function exportPoster(format) {
         if (!network) return;
         const isPDF = format === 'pdf';
@@ -1311,7 +1242,7 @@
             maxY = Math.max(maxY, positions[n.id].y + pad);
           });
           if (!isFinite(minX)) {
-            minX = -1400; maxX = 1400; minY = -1400; maxY = 1400;
+            minX = -1800; maxX = 1800; minY = -1800; maxY = 1800;
           }
 
           const gW = maxX - minX;
@@ -1381,20 +1312,15 @@
           posterCanvas.height = posterH;
           const ctx = posterCanvas.getContext('2d', { alpha: false });
 
-          // Background
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, posterW, posterH);
 
-          const bgGrad = ctx.createRadialGradient(
-            posterW / 2, graphY + graphH / 2, 0,
-            posterW / 2, graphY + graphH / 2, Math.max(posterW, graphH) * 0.7
-          );
+          const bgGrad = ctx.createLinearGradient(0, 0, posterW, posterH);
           bgGrad.addColorStop(0, '#fbfdff');
           bgGrad.addColorStop(1, '#f4f7fb');
           ctx.fillStyle = bgGrad;
           ctx.fillRect(0, graphY, posterW, graphH);
 
-          // Subtle grid
           ctx.save();
           ctx.beginPath();
           ctx.rect(0, graphY, posterW, graphH);
@@ -1409,15 +1335,12 @@
           }
           ctx.restore();
 
-          // Graph
           ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
 
-          // Frame
           ctx.strokeStyle = 'rgba(15,23,42,0.18)';
           ctx.lineWidth = 4;
           ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
 
-          // Footer caption
           ctx.fillStyle = 'rgba(15,23,42,0.45)';
           ctx.font = '28px Inter, sans-serif';
           ctx.textAlign = 'center';
@@ -1455,7 +1378,6 @@
         }
       }
 
-      // Event listeners
       function setupListeners() {
         root.querySelectorAll('.visnet-fit-btn').forEach(b => {
           b.addEventListener('click', () => {
@@ -1486,7 +1408,6 @@
         ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
           .forEach(e => document.addEventListener(e, handleFSChange));
 
-        // Top search bar
         if (searchInput && searchResults) {
           searchInput.addEventListener('input', () => runSearch(searchInput.value, searchResults, false));
           searchInput.addEventListener('focus', () => {
@@ -1509,7 +1430,6 @@
           });
         }
 
-        // Legend search
         const legendSearch = legendEl?.querySelector('.visnet-legend-search');
         const legendHits = legendEl?.querySelector('.visnet-legend-hits');
         if (legendSearch && legendHits) {
@@ -1523,7 +1443,6 @@
         }
       }
 
-      // Start
       try {
         if (typeof vis === 'undefined') {
           showError('vis-network library failed to load.');
