@@ -346,7 +346,7 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a link</strong> to illuminate the connected nodes and all other nodes that share them. Click a node to view its immediate circle, or click empty space to reset.</p>
+    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 2-hop path (the node, its connections, and everything those connections touch). Click a link to highlight the nodes it joins and their neighbours. Click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
@@ -422,6 +422,7 @@
       { name: "Simon Geraghty", about: "writing, literature", contact: "Simon Geraghty", kind: "person" },
       { name: "Trea Ivory", about: "visual art, illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
       { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
+      { name: "Tadhg Kelleher", about: "music, art, history, heritage, events", contact: "Tadhg Kelleher", kind: "person" },
 
       // Venues / spaces / organisations
       { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
@@ -501,19 +502,20 @@
       enabled: true,
       solver: 'forceAtlas2Based',
       forceAtlas2Based: {
-        gravitationalConstant: -40,
-        centralGravity: 0.018,
-        springLength: 135,
-        springConstant: 0.08,
-        damping: 0.88,         // High damping eliminates oscillating bounce
-        avoidOverlap: 0.85
+        gravitationalConstant: -35,
+        centralGravity: 0.012,
+        springLength: 145,
+        springConstant: 0.055,
+        damping: 0.95,         // Very high damping — almost no residual bounce
+        avoidOverlap: 0.9
       },
-      minVelocity: 0.75,       // Stops simulation quickly once settled
-      maxVelocity: 28,         // Prevents explosive sudden movements
+      minVelocity: 1.4,        // Stops simulation as soon as motion is tiny
+      maxVelocity: 12,         // Hard cap on speed to prevent jitter
+      timestep: 0.35,
       stabilization: {
         enabled: true,
-        iterations: 400,       // Computes layout off-screen before reveal
-        updateInterval: 50,
+        iterations: 550,       // Extra iterations for a settled layout before reveal
+        updateInterval: 40,
         fit: true
       }
     };
@@ -935,17 +937,39 @@
         // Click interaction: Node, Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            // Node clicked: Light up this node + its immediate neighbours
+            // Node clicked: 2-hop neighbourhood
+            // selected → its neighbours → the nodes connected to those neighbours
             const selectedId = params.nodes[0];
             const litNodeIds = new Set([selectedId]);
             const litEdgeIds = new Set();
 
+            // Build adjacency list (node → [{node, edge}, …])
+            const adj = {};
             edgesDS.get().forEach(e => {
-              if (e.from === selectedId) {
-                litNodeIds.add(e.to);
-                litEdgeIds.add(e.id);
-              } else if (e.to === selectedId) {
-                litNodeIds.add(e.from);
+              if (!adj[e.from]) adj[e.from] = [];
+              if (!adj[e.to]) adj[e.to] = [];
+              adj[e.from].push({ node: e.to, edge: e.id });
+              adj[e.to].push({ node: e.from, edge: e.id });
+            });
+
+            // BFS limited to 2 hops
+            const queue = [[selectedId, 0]];
+            while (queue.length) {
+              const [cur, depth] = queue.shift();
+              if (depth >= 2) continue;
+              const neighbours = adj[cur] || [];
+              for (const { node, edge } of neighbours) {
+                litEdgeIds.add(edge);
+                if (!litNodeIds.has(node)) {
+                  litNodeIds.add(node);
+                  queue.push([node, depth + 1]);
+                }
+              }
+            }
+
+            // Keep edges that run between any two lit nodes (closes the subgraph)
+            edgesDS.get().forEach(e => {
+              if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) {
                 litEdgeIds.add(e.id);
               }
             });
