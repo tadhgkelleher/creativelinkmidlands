@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Westmeath Arts & Creative Network</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --blue: #1a56db;
+      --blue-hover: #1e40af;
+      --blue-soft: #eff6ff;
+      --blue-text: #1e3a8a;
+      --bg: #f8fafc;
+      --grid: rgba(26, 86, 219, 0.04);
+      --border: rgba(15, 23, 42, 0.08);
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.1), 0 4px 12px -4px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 20px 8px;
+    }
+
+    .page-header h1 {
+      margin: 0 0 6px;
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .page-header p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    #visnet-root {
+      max-width: 1200px;
+      margin: 0 auto 2.5rem;
+      padding: 0 16px 40px;
+      position: relative;
+    }
+
+    .visnet-controls {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 18px 0 14px;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .visnet-container {
+      width: 100%;
+      aspect-ratio: 16/10;
+      max-height: 720px;
+      min-height: 480px;
+      position: relative;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 50% 45%, rgba(255,255,255,0.95) 0%, transparent 70%),
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      opacity: 0;
+      animation: visnetFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .visnet-container:fullscreen,
+    .visnet-container:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      aspect-ratio: auto;
+      margin: 0;
+      border-radius: 0;
+      background: #fff;
+      border: none;
+    }
+
+    .visnet-fullscreen-controls {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 1001;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .visnet-btn,
+    .visnet-select {
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+      border: none;
+      line-height: 1.25;
+    }
+
+    .visnet-btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .visnet-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+
+    .visnet-btn:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .visnet-btn:disabled,
+    .visnet-select:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .visnet-btn:focus-visible,
+    .visnet-select:focus-visible {
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.35);
+    }
+
+    .visnet-select {
+      border: 1.5px solid #c7d2fe;
+      color: var(--blue-text);
+      background: #fff;
+      cursor: pointer;
+      padding-right: 28px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .visnet-select:hover:not(:disabled) {
+      border-color: var(--blue);
+      background-color: var(--blue-soft);
+    }
+
+    .visnet-select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+    }
+
+    .visnet-fullscreen-btn { background: var(--blue); color: #fff; }
+    .visnet-fullscreen-btn:hover:not(:disabled) { background: var(--blue-hover); }
+
+    .visnet-exit-fs-btn { background: #dc2626; color: #fff; }
+    .visnet-exit-fs-btn:hover:not(:disabled) { background: #b91c1c; }
+
+    .visnet-toggle-physics-btn {
+      background: #fff;
+      border: 1.5px solid #c7d2fe;
+      color: var(--blue-text);
+    }
+    .visnet-toggle-physics-btn:hover:not(:disabled) {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+    }
+
+    .visnet-fit-btn {
+      background: #059669;
+      color: #fff;
+    }
+    .visnet-fit-btn:hover:not(:disabled) { background: #047857; }
+
+    .visnet-fs-instruction {
+      position: absolute;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      background: rgba(30, 58, 138, 0.92);
+      padding: 11px 22px;
+      border-radius: 999px;
+      display: none;
+      z-index: 10000;
+      pointer-events: none;
+      font-weight: 500;
+      font-size: 13.5px;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.4s ease;
+    }
+
+    .visnet-loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 500;
+      color: var(--blue-text);
+      background: rgba(255, 255, 255, 0.97);
+      padding: 14px 28px;
+      border-radius: 10px;
+      z-index: 1002;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      border: 1px solid var(--border);
+      animation: visnet-pulse 2.2s ease-in-out infinite;
+    }
+
+    .visnet-error-text { color: #dc2626; font-weight: 600; }
+
+    .visnet-legend {
+      display: none;
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      z-index: 1000;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      min-width: 150px;
+    }
+
+    .visnet-legend .legend-title {
+      font-weight: 700;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      color: #64748b;
+      letter-spacing: 0.06em;
+    }
+
+    .visnet-legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 7px;
+      color: #334155;
+    }
+
+    .visnet-legend-item:last-child { margin-bottom: 0; }
+
+    .visnet-legend-color {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      margin-right: 9px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+      flex-shrink: 0;
+    }
+
+    .visnet-stats {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    @keyframes visnet-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0.18); }
+      70%  { box-shadow: 0 0 0 10px rgba(26, 86, 219, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(26, 86, 219, 0); }
+    }
+
+    @keyframes visnetFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .visnet-container { animation: none; opacity: 1; }
+      .visnet-loading-spinner { animation: none; }
+    }
+
+    @media (max-width: 900px) {
+      .visnet-export-select,
+      .visnet-fullscreen-btn { display: none !important; }
+    }
+
+    @media (max-width: 768px) {
+      .visnet-container {
+        aspect-ratio: 1/1;
+        border-radius: 14px;
+      }
+      .visnet-controls {
+        flex-direction: column;
+        padding: 14px;
+        gap: 8px;
+      }
+      .visnet-btn,
+      .visnet-select {
+        width: 100%;
+        justify-content: center;
+      }
+      .page-header h1 { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Westmeath Arts &amp; Creative Network</h1>
+    <p>Interactive map of artists, organisations, venues and shared practices across Westmeath. Click a node to highlight connections. Use physics / circular layout, fullscreen and high-res A1 export.</p>
+  </div>
+
+  <div id="visnet-root">
+    <div class="visnet-controls">
+      <button type="button" class="visnet-toggle-physics-btn visnet-btn" disabled>
+        <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
+      </button>
+      <button type="button" class="visnet-fit-btn visnet-btn" disabled>
+        <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
+      </button>
+      <select class="visnet-export-select visnet-select" aria-label="Export Graph" disabled>
+        <option value="">Export…</option>
+        <option value="png">Export as PNG (A1)</option>
+        <option value="pdf">Export as PDF (A1)</option>
+      </select>
+      <button type="button" class="visnet-fullscreen-btn visnet-btn" disabled>
+        <i class="fas fa-expand" aria-hidden="true"></i> Fullscreen
+      </button>
+    </div>
+
+    <div class="visnet-container" role="img" aria-label="Westmeath arts and creative network graph">
+      <div class="visnet-loading-spinner">
+        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Building network…
+      </div>
+      <div class="visnet-fs-instruction">
+        <i class="fas fa-magic" aria-hidden="true"></i> Press Spacebar to toggle layout
+      </div>
+      <div class="visnet-legend"></div>
+      <div class="visnet-fullscreen-controls">
+        <button type="button" class="visnet-toggle-physics-btn visnet-btn">
+          <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
+        </button>
+        <button type="button" class="visnet-fit-btn visnet-btn">
+          <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
+        </button>
+        <select class="visnet-export-select visnet-select" aria-label="Export Graph">
+          <option value="">Export…</option>
+          <option value="png">Export as PNG (A1)</option>
+          <option value="pdf">Export as PDF (A1)</option>
+        </select>
+        <button type="button" class="visnet-exit-fs-btn visnet-btn">
+          <i class="fas fa-compress" aria-hidden="true"></i> Exit Fullscreen
+        </button>
+      </div>
+    </div>
+    <div class="visnet-stats" id="visnet-stats"></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ====================================================================
+    // DATA – people, organisations & venues with tags
+    // ====================================================================
+    const RAW = [
+      // People / organisations
+      { name: "Gateway Youth Project UBU", about: "youth, community, education", contact: "Shelly Dunican", kind: "person" },
+      { name: "Barbara – Art Box", about: "visual art, children’s art, workshops, mixed media, DIY", contact: "Barbara", kind: "person" },
+      { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
+      { name: "Katherine Knott Walsh", about: "craft, crochet, visual art, painting, drawing, weaving, spinning, workshops, community arts", contact: "Katherine Knott Walsh", kind: "person" },
+      { name: "Aoife Doolan", about: "visual art, writing, music, gardening, community arts, inclusion", contact: "Aoife Doolan", kind: "person" },
+      { name: "Philomena Murphy", about: "radio, broadcasting, sound engineering, poetry, music, media", contact: "Philomena Murphy", kind: "person" },
+      { name: "Clare Daly Madden", about: "visual art, painting, cyanotype, crochet, willow weaving, textiles, workshops, community arts", contact: "Clare Daly Madden", kind: "person" },
+      { name: "Anna Boles", about: "visual art, painting", contact: "Anna Boles", kind: "person" },
+      { name: "Sinéad Byrne Canning", about: "spoken word, poetry, events, MC, stage management, festivals, event promotion", contact: "Sinéad Byrne Canning", kind: "person" },
+      { name: "Emily O'Callaghan", about: "events, festivals, administration, social media, community", contact: "Emily O'Callaghan", kind: "person" },
+      { name: "Avril Egan", about: "visual art, painting, oil painting", contact: "Avril Egan", kind: "person" },
+      { name: "Anne-Marie O'Sullivan", about: "theatre, writing, puppetry, storytelling, site-specific theatre, digital theatre, directing, producing", contact: "Anne-Marie O'Sullivan", kind: "person" },
+      { name: "Mimi Seery", about: "visual art, public art, community arts", contact: "Mimi Seery", kind: "person" },
+      { name: "Patsy Preston", about: "visual art, sculpture, installation art, event décor, community arts, murals, sign writing, natural dyes, eco art", contact: "Patsy Preston", kind: "person" },
+      { name: "Athlone Arts Gallery", about: "visual art, gallery, exhibitions, arts", contact: "Rosie Boles", kind: "person" },
+      { name: "Simon Geraghty", about: "writing, literature", contact: "Simon Geraghty", kind: "person" },
+      { name: "Trea Ivory", about: "visual art, illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
+      { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
+
+      // Venues / spaces / organisations
+      { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
+      { name: "Abbey Road Artists' Studios", about: "artist studios, visual art, creative workspace, exhibitions, workshops, community arts", contact: "", kind: "venue" },
+      { name: "Abbey Road Community Space", about: "exhibitions, workshops, classes, talks, community and creative projects", contact: "", kind: "venue" },
+      { name: "Chimera Gallery", about: "visual art, gallery, exhibitions", contact: "", kind: "venue" },
+      { name: "The Bastion Gallery", about: "visual art, exhibitions, gallery", contact: "", kind: "venue" },
+      { name: "Purple Raven Art Gallery", about: "visual art, Irish craft, gallery, exhibitions", contact: "", kind: "venue" },
+      { name: "Glasson Craft Gallery", about: "craft, visual art, Irish-made work, gallery", contact: "", kind: "venue" },
+      { name: "The Atrium – Civic Centre Athlone", about: "public exhibitions, community and cultural activity", contact: "", kind: "venue" },
+      { name: "The Atrium – County Buildings Mullingar", about: "public exhibitions, cultural activity, visual art", contact: "", kind: "venue" },
+      { name: "Cúige Studios", about: "creative studios, artists, creative businesses, community space, workshops, multidisciplinary arts", contact: "", kind: "venue" },
+      { name: "Devine Art Studios", about: "visual art, painting, workshops, artist studio, craft", contact: "", kind: "venue" },
+      { name: "Grouse Lodge Recording Studios", about: "recording, music production, residential recording, international music industry", contact: "", kind: "venue" },
+      { name: "Áras an Mhuilinn", about: "traditional music, song, dance, Irish culture, workshops, cultural events", contact: "", kind: "venue" },
+      { name: "Dún na Sí Heritage Centre", about: "traditional music, dance, céilí, heritage, museum, community arts, cultural events", contact: "", kind: "venue" },
+      { name: "Mullingar Arts Centre", about: "theatre, music, dance, visual art, workshops, community arts, performance", contact: "", kind: "venue" },
+      { name: "Dean Crowe Theatre & Arts Centre", about: "theatre, music, dance, comedy, performance, community arts, cultural events", contact: "", kind: "venue" },
+      { name: "Tuar Ard Arts & Enterprise Centre", about: "theatre, visual art, gallery, arts, enterprise, community activity, workshops", contact: "", kind: "venue" },
+      { name: "Athlone Little Theatre", about: "theatre, drama, performance, community arts", contact: "", kind: "venue" },
+      { name: "Mullingar Pewter", about: "traditional craft, metalwork, craft production, workshops", contact: "", kind: "venue" },
+      { name: "Athlone Photography Club", about: "photography, exhibitions, photography community", contact: "", kind: "venue" },
+      { name: "Music Generation Westmeath", about: "music education, participation, youth music, community music", contact: "", kind: "venue" },
+      { name: "Westmeath Arts Office", about: "arts development, funding, policy, artist support, cultural programming", contact: "", kind: "venue" },
+      { name: "Westmeath Culture", about: "arts, culture, creative development, cultural venues, artists and organisations", contact: "", kind: "venue" },
+      { name: "Creative Ireland Westmeath", about: "creativity, community projects, arts, culture, participation, creative development", contact: "", kind: "venue" },
+      { name: "Athlone Castle", about: "heritage, exhibitions, cultural events, interpretation, public programming", contact: "", kind: "venue" },
+      { name: "Moate Museum", about: "local history, heritage, exhibitions, community culture", contact: "", kind: "venue" },
+      { name: "Belvedere House & Gardens", about: "heritage, architecture, gardens, cultural events, exhibitions", contact: "", kind: "venue" },
+      { name: "Mullingar Museum", about: "local history, heritage, collections, exhibitions, education", contact: "", kind: "venue" },
+      { name: "Mullingar Barracks", about: "military heritage, local history, cultural heritage", contact: "", kind: "venue" },
+      { name: "Athlone Community Radio", about: "radio, broadcasting, music, community media, local culture", contact: "", kind: "venue" },
+      { name: "RTÉ / Athlone broadcasting heritage", about: "broadcasting history, radio heritage, Athlone/Moydrum transmission history", contact: "", kind: "venue" },
+      { name: "Comhaltas centres – Westmeath", about: "traditional music, song, dance, Irish cultural education and participation", contact: "", kind: "venue" },
+      { name: "Athlone Arts & Heritage Festivals", about: "festivals, visual art, heritage, music, performance, community participation", contact: "", kind: "venue" },
+      { name: "Culture Night – Westmeath venues", about: "visual art, music, performance, heritage, workshops, community culture", contact: "", kind: "venue" },
+      { name: "Mullingar arts/music festivals", about: "music, visual art, performance, community and cultural events", contact: "", kind: "venue" },
+      { name: "Music at Mearescourt", about: "music, performance, cultural events", contact: "", kind: "venue" },
+      { name: "Tuar Ard Gallery", about: "visual art, exhibitions, community arts", contact: "", kind: "venue" },
+      { name: "Athlone Shannon Waterfront / Cultural Quarter", about: "outdoor cultural activity, public art, festivals, performance, heritage", contact: "", kind: "venue" },
+      { name: "Dún na Sí outdoor/event spaces", about: "outdoor events, heritage, traditional culture, music, community activity", contact: "", kind: "venue" },
+      { name: "Belvedere outdoor spaces", about: "outdoor cultural events, heritage, architecture, gardens, arts programming", contact: "", kind: "venue" },
+      { name: "Tuar Ard outdoor/event spaces", about: "outdoor events, community arts, festivals, cultural activity", contact: "", kind: "venue" },
+      { name: "Local community theatres – Westmeath", about: "theatre, drama, performance, community arts", contact: "", kind: "venue" },
+      { name: "Local film clubs – Westmeath", about: "film, cinema, screen culture, community events", contact: "", kind: "venue" },
+      { name: "Westmeath libraries", about: "literature, writing, exhibitions, talks, workshops, community culture", contact: "", kind: "venue" },
+      { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
+    ];
+
+    // Colour palette – people & venues stay distinct; tags get unique colours by sector
+    const COLORS = {
+      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral – artists/orgs
+      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo – venues
+      edge:    'rgba(144, 164, 174, 0.42)'
+    };
+
+    // Sector → colour (unique hues for skills/practices)
+    const SECTOR_COLORS = {
+      'Visual Art':          { background: '#E91E63', border: '#C2185B' }, // pink/magenta
+      'Craft & Making':      { background: '#FF9800', border: '#F57C00' }, // amber
+      'Performing Arts':     { background: '#9C27B0', border: '#7B1FA2' }, // purple
+      'Music':               { background: '#00BCD4', border: '#0097A7' }, // cyan
+      'Literature & Words':  { background: '#8BC34A', border: '#689F38' }, // light green
+      'Community & Education': { background: '#FFEB3B', border: '#F9A825' }, // yellow
+      'Heritage & Museums':  { background: '#795548', border: '#5D4037' }, // brown
+      'Media & Broadcast':   { background: '#607D8B', border: '#455A64' }, // blue-grey
+      'Events & Festivals':  { background: '#F44336', border: '#D32F2F' }, // red
+      'Dance':               { background: '#EC407A', border: '#C2185B' }, // deep pink
+      'Film & Screen':       { background: '#26A69A', border: '#00897B' }, // teal
+      'Public & Outdoor':    { background: '#66BB6A', border: '#43A047' }, // green
+      'Enterprise & Admin':  { background: '#7E57C2', border: '#5E35B1' }, // deep purple
+      'Other':               { background: '#90A4AE', border: '#607D8B' }  // grey
+    };
+
+    // Map individual tags → sector
+    function getSector(tag) {
+      const t = tag.toLowerCase();
+      if (/visual art|painting|oil painting|drawing|illustration|gallery|exhibitions|public art|installation|murals|sign writing|cyanotype|2d animation|contemporary visual|mixed media|children.?s art|eco art|natural dyes|artist studio|creative workspace|atrium|sculpture/.test(t)) return 'Visual Art';
+      if (/craft|crochet|weaving|spinning|willow|textiles|metalwork|pewter|dry stone|letter carving|stone carving|diy|irish-made|irish craft/.test(t)) return 'Craft & Making';
+      if (/theatre|drama|puppetry|storytelling|directing|producing|site-specific|digital theatre|comedy|performance(?! dance)|stage management|mc/.test(t)) return 'Performing Arts';
+      if (/music|recording|song|traditional music|sound engineering|comhaltas|music generation|music production|residential recording/.test(t)) return 'Music';
+      if (/writing|literature|poetry|spoken word|storytelling/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
+      if (/community|education|youth|workshops|classes|talks|inclusion|participation|artist support|funding|policy|cultural programming|creative development|creativity|administration/.test(t)) return 'Community & Education';
+      if (/heritage|museum|castle|history|military|interpretation|local history|collections|barracks|belvedere|moate|athlone castle/.test(t)) return 'Heritage & Museums';
+      if (/radio|broadcast|media|social media|sound engineering/.test(t)) return 'Media & Broadcast';
+      if (/festival|events|event promotion|event décor|culture night|cultural events|cultural activity/.test(t)) return 'Events & Festivals';
+      if (/dance|choreography|dance teaching|céilí/.test(t)) return 'Dance';
+      if (/film|cinema|screen/.test(t)) return 'Film & Screen';
+      if (/outdoor|gardens|public art|waterfront|cultural quarter|architecture/.test(t)) return 'Public & Outdoor';
+      if (/enterprise|creative businesses|incubation|arts development|westmeath arts|westmeath culture|creative ireland/.test(t)) return 'Enterprise & Admin';
+      return 'Other';
+    }
+
+    // Normalise tag text
+    function normTag(s) {
+      return s.toLowerCase()
+        .replace(/[’']/g, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function decodeEntities(txt) {
+      return String(txt || '')
+        .replace(/&amp;/g, '&').replace(/&#038;/g, '&')
+        .replace(/&quot;/g, '"').replace(/&#039;/g, "'")
+        .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    }
+
+    // Build graph data
+    function buildGraph() {
+      const nodes = [];
+      const edges = [];
+      const edgeKeys = new Set();
+      const nodeMap = {};          // id -> index
+      const tagIdMap = {};         // normalised tag -> node id
+      const entityTagMap = {};     // entity id -> [tag ids]
+      const usedSectors = new Set();
+
+      function addNode(id, label, type, color, extra = {}) {
+        if (nodeMap[id] !== undefined) return id;
+        const n = {
+          id,
+          label: '',
+          externalLabel: label,
+          title: extra.title || label,
+          edgeCount: 0,
+          color,
+          nodeType: type,
+          shape: 'dot',
+          size: type === 'tag' ? 14 : 22,
+          borderWidth: 1,
+          mass: 1,
+          ...extra
+        };
+        nodeMap[id] = nodes.length;
+        nodes.push(n);
+        return id;
+      }
+
+      function addEdge(from, to) {
+        if (from === to) return;
+        const ek = from < to ? from + '|' + to : to + '|' + from;
+        if (edgeKeys.has(ek)) return;
+        edgeKeys.add(ek);
+        edges.push({ from, to, arrows: '', color: COLORS.edge, width: 1.2 });
+        nodes[nodeMap[from]].edgeCount++;
+        nodes[nodeMap[to]].edgeCount++;
+      }
+
+      // 1. Create entity nodes + extract tags
+      RAW.forEach((item, idx) => {
+        const eid = 'e_' + idx;
+        const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
+        const typeLabel = item.kind === 'person' ? 'Artist / Organisation' : 'Venue / Space';
+        const contactLine = item.contact ? `\nContact: ${item.contact}` : '';
+        const title = `${item.name}\n[${typeLabel}]${contactLine}\n\n${item.about}`;
+
+        addNode(eid, item.name, item.kind, color, {
+          title,
+          contact: item.contact || '',
+          about: item.about
+        });
+
+        const tags = item.about.split(',').map(t => normTag(t)).filter(Boolean);
+        entityTagMap[eid] = [];
+
+        tags.forEach(tag => {
+          let tid = tagIdMap[tag];
+          if (!tid) {
+            tid = 't_' + Object.keys(tagIdMap).length;
+            tagIdMap[tag] = tid;
+            const sector = getSector(tag);
+            usedSectors.add(sector);
+            const col = SECTOR_COLORS[sector] || SECTOR_COLORS['Other'];
+            const display = tag.replace(/\b\w/g, c => c.toUpperCase());
+            addNode(tid, display, 'tag', col, {
+              title: `Skill / Practice: ${display}\nSector: ${sector}`,
+              sector
+            });
+          }
+          entityTagMap[eid].push(tid);
+          addEdge(eid, tid);
+        });
+      });
+
+      // 2. Size & mass by connectivity
+      nodes.forEach(n => {
+        const base = n.nodeType === 'tag' ? 12 : 18;
+        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
+        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, size);
+        n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
+        if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
+      });
+
+      // 3. Initial circular layout (used when physics off)
+      const total = nodes.length;
+      const radius = 820;
+      const step = total > 0 ? (2 * Math.PI) / total : 0;
+      nodes.forEach((n, i) => {
+        n.x = Math.cos(i * step) * radius;
+        n.y = Math.sin(i * step) * radius;
+        n.fixed = { x: true, y: true };
+      });
+
+      // Legend: people + venues + each used sector
+      const legend = {
+        'Artist / Organisation': COLORS.person.background,
+        'Venue / Space': COLORS.venue.background
+      };
+      // Stable order for sectors
+      const sectorOrder = [
+        'Visual Art', 'Craft & Making', 'Performing Arts', 'Music', 'Dance',
+        'Literature & Words', 'Community & Education', 'Heritage & Museums',
+        'Media & Broadcast', 'Events & Festivals', 'Film & Screen',
+        'Public & Outdoor', 'Enterprise & Admin', 'Other'
+      ];
+      sectorOrder.forEach(s => {
+        if (usedSectors.has(s)) legend[s] = SECTOR_COLORS[s].background;
+      });
+
+      return { nodes, edges, legend, stats: {
+        entities: RAW.length,
+        people: RAW.filter(r => r.kind === 'person').length,
+        venues: RAW.filter(r => r.kind === 'venue').length,
+        tags: Object.keys(tagIdMap).length,
+        connections: edges.length
+      }};
+    }
+
+    // ====================================================================
+    // UI & NETWORK
+    // ====================================================================
+    document.addEventListener('DOMContentLoaded', function () {
+      const root = document.getElementById('visnet-root');
+      if (!root) return;
+
+      const container   = root.querySelector('.visnet-container');
+      const spinner     = root.querySelector('.visnet-loading-spinner');
+      const legendEl    = root.querySelector('.visnet-legend');
+      const instruction = root.querySelector('.visnet-fs-instruction');
+      const fsControls  = root.querySelector('.visnet-fullscreen-controls');
+      const statsEl     = document.getElementById('visnet-stats');
+
+      let network, nodesDS, edgesDS;
+      let isPhysicsEnabled = true;
+      let isToggling = false;
+      let wasPhysicsBeforeFS = true;
+      let textCache = {};
+
+      function unlock() {
+        root.querySelectorAll('.visnet-btn, .visnet-select').forEach(el => { el.disabled = false; });
+      }
+
+      function showError(msg) {
+        if (!spinner) return;
+        spinner.innerHTML = `<span class="visnet-error-text"><i class="fas fa-exclamation-triangle"></i> ${msg}</span>`;
+        spinner.style.animation = 'none';
+        spinner.style.display = 'block';
+      }
+
+      function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                  document.mozFullScreenElement || document.msFullscreenElement);
+      }
+
+      // ---------- Custom labels (adapted from VisNet) ----------
+      function drawLabels(ctx, net, nodesData, isExport = false) {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = isExport ? 6.5 : 0.7;
+        if (isExport) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+        }
+
+        const pos = net.getPositions();
+        const fs  = isFullscreen() || isExport;
+
+        // Protect a zone around highly-connected hubs so labels don’t collide
+        const hubs = [];
+        for (const id in pos) {
+          const n = nodesData.get(id);
+          if (n && n.edgeCount >= 8) {
+            hubs.push({ x: pos[id].x, y: pos[id].y, r: (n.size || 20) + (fs ? 95 : 70) });
+          }
+        }
+
+        for (const id in pos) {
+          const n = nodesData.get(id);
+          if (!n || !n.externalLabel) continue;
+
+          let fontSize, padding;
+          if (n.nodeType === 'tag') {
+            padding = 28;
+            fontSize = fs ? (isExport ? 18 : 15) : 11;
+          } else if (n.edgeCount <= 2) {
+            padding = 36;
+            fontSize = fs ? (isExport ? 20 : 16) : 12;
+          } else {
+            padding = 48;
+            const base = fs ? (isExport ? 22 : 18) : 13;
+            fontSize = Math.max(fs ? (isExport ? 18 : 15) : 12, base + (16 * ((n.size - 18) / 34)));
+          }
+
+          if (!textCache[id] || textCache[id].fontSize !== fontSize) {
+            let txt = n.externalLabel.length > 42
+              ? n.externalLabel.substring(0, 39) + '…'
+              : n.externalLabel;
+            txt = decodeEntities(txt);
+
+            const words = txt.split(' ');
+            const lines = [];
+            let cur = '';
+            ctx.font = `${fontSize}px Inter, sans-serif`;
+            const wrap = fs ? 130 : 85;
+
+            for (let i = 0; i < words.length; i++) {
+              if (ctx.measureText(cur + words[i] + ' ').width > wrap && i > 0) {
+                lines.push(cur.trim());
+                cur = words[i] + ' ';
+              } else {
+                cur += words[i] + ' ';
+              }
+            }
+            lines.push(cur.trim());
+            textCache[id] = { lines, fontSize };
+          }
+
+          const cached = textCache[id];
+          const ang  = Math.atan2(pos[id].y, pos[id].x);
+          let dist = n.size + padding + (n.size / 2.2);
+
+          // Push label outward if it would land inside a hub zone
+          let lx = pos[id].x + Math.cos(ang) * dist;
+          let ly = pos[id].y + Math.sin(ang) * dist;
+          hubs.forEach(h => {
+            const dx = lx - h.x, dy = ly - h.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < h.r) dist += (h.r - d) + 18;
+          });
+
+          lx = pos[id].x + Math.cos(ang) * dist;
+          ly = pos[id].y + Math.sin(ang) * dist;
+          const sy = ly - (cached.lines.length * (fontSize * 1.32) - fontSize * 1.32) / 2;
+
+          ctx.font = `${cached.fontSize}px Inter, sans-serif`;
+          cached.lines.forEach((l, i) => {
+            ctx.strokeText(l, lx, sy + i * (fontSize * 1.32));
+            ctx.fillText(l, lx, sy + i * (fontSize * 1.32));
+          });
+        }
+        ctx.restore();
+      }
+
+      // ---------- Render ----------
+      function render(data) {
+        textCache = {};
+
+        let initial = data.nodes;
+        if (isPhysicsEnabled) {
+          initial = initial.map(n => {
+            const c = { ...n, fixed: false };
+            delete c.x; delete c.y;
+            return c;
+          });
+        }
+
+        nodesDS = new vis.DataSet(initial);
+        edgesDS = new vis.DataSet(data.edges);
+
+        network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+          physics: {
+            enabled: isPhysicsEnabled,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+              gravitationalConstant: -48,
+              centralGravity: 0.012,
+              springLength: 140,
+              springConstant: 0.06,
+              damping: 0.55,
+              avoidOverlap: 0.7
+            },
+            stabilization: { iterations: 180, updateInterval: 25 }
+          },
+          nodes: {
+            shape: 'dot',
+            shadow: { enabled: true, size: 7, x: 0, y: 2, color: 'rgba(0,0,0,0.18)' },
+            font: { size: 0 }   // we draw labels ourselves
+          },
+          edges: {
+            smooth: { type: 'continuous', roundness: 0.35 },
+            color: { color: COLORS.edge, highlight: '#1a56db', hover: '#1a56db' },
+            width: 1.2,
+            selectionWidth: 2.5
+          },
+          interaction: {
+            hover: true,
+            tooltipDelay: 80,
+            hideEdgesOnDrag: false,
+            multiselect: false
+          }
+        });
+
+        network.once('stabilizationIterationsDone', () => {
+          network.setOptions({ physics: { enabled: isPhysicsEnabled } });
+        });
+
+        network.once('afterDrawing', () => {
+          if (spinner) spinner.style.display = 'none';
+          unlock();
+        });
+
+        // Legend
+        if (data.legend && legendEl) {
+          let html = '<div class="legend-title">Legend</div>';
+          for (const [type, color] of Object.entries(data.legend)) {
+            html += `<div class="visnet-legend-item">
+                       <span class="visnet-legend-color" style="background:${color}"></span>
+                       <span>${type}</span>
+                     </div>`;
+          }
+          legendEl.innerHTML = html;
+          legendEl.style.display = 'block';
+        }
+
+        // Stats
+        if (statsEl && data.stats) {
+          const s = data.stats;
+          statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
+        }
+
+        network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
+
+        // Highlight connected nodes on click
+        network.on('click', params => {
+          if (params.nodes.length) {
+            const selectedId = params.nodes[0];
+            const connected = new Set([selectedId]);
+            edgesDS.get().forEach(e => {
+              if (e.from === selectedId) connected.add(e.to);
+              if (e.to === selectedId) connected.add(e.from);
+            });
+            const updates = nodesDS.getIds().map(id => ({
+              id,
+              opacity: connected.has(id) ? 1 : 0.18,
+              color: connected.has(id)
+                ? undefined
+                : { background: '#cbd5e1', border: '#94a3b8' }
+            }));
+            // Restore original colours for connected
+            nodesDS.get().forEach(n => {
+              if (connected.has(n.id)) {
+                updates.find(u => u.id === n.id).color = n.color;
+              }
+            });
+            nodesDS.update(updates);
+          } else {
+            // Reset
+            nodesDS.update(nodesDS.get().map(n => ({
+              id: n.id,
+              opacity: 1,
+              color: n.color
+            })));
+          }
+        });
+
+        setupListeners();
+      }
+
+      function redrawCircular() {
+        if (!network || !nodesDS) return;
+        const ids = nodesDS.getIds();
+        const step = ids.length ? (2 * Math.PI) / ids.length : 0;
+        const r = 820;
+        const updates = ids.map((id, i) => ({
+          id,
+          x: Math.cos(i * step) * r,
+          y: Math.sin(i * step) * r,
+          fixed: { x: true, y: true }
+        }));
+        nodesDS.update(updates);
+        network.moveTo({ position: { x: 0, y: 0 }, scale: 1, animation: false });
+        network.fit({ animation: true });
+      }
+
+      function togglePhysics() {
+        if (isToggling || !network) return;
+        isToggling = true;
+        isPhysicsEnabled = !isPhysicsEnabled;
+
+        const icon = isPhysicsEnabled ? 'fa-arrows-alt' : 'fa-circle-notch';
+        root.querySelectorAll('.visnet-toggle-physics-btn').forEach(b => {
+          b.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i> Toggle Layout`;
+        });
+
+        if (isPhysicsEnabled) {
+          network.setOptions({
+            physics: {
+              enabled: true,
+              solver: 'forceAtlas2Based',
+              forceAtlas2Based: {
+                gravitationalConstant: -48,
+                centralGravity: 0.012,
+                springLength: 140,
+                springConstant: 0.06,
+                damping: 0.55,
+                avoidOverlap: 0.7
+              }
+            }
+          });
+          nodesDS.update(nodesDS.getIds().map(id => ({ id, fixed: false })));
+        } else {
+          network.setOptions({ physics: { enabled: false } });
+          redrawCircular();
+        }
+        setTimeout(() => { isToggling = false; }, 600);
+      }
+
+      function handleFSChange() {
+        const fs = isFullscreen();
+        if (fsControls) fsControls.style.display = fs ? 'flex' : 'none';
+
+        if (fs) {
+          if (instruction) {
+            instruction.style.display = 'block';
+            instruction.style.opacity = '1';
+            setTimeout(() => { instruction.style.opacity = '0'; }, 4000);
+          }
+          wasPhysicsBeforeFS = isPhysicsEnabled;
+          if (!isPhysicsEnabled) togglePhysics();
+        } else {
+          if (instruction) instruction.style.display = 'none';
+          if (isPhysicsEnabled !== wasPhysicsBeforeFS) {
+            togglePhysics();
+          } else if (!isPhysicsEnabled) {
+            redrawCircular();
+          }
+        }
+      }
+
+      // ---------- High-res A1 Export (modelled on VisNet) ----------
+      async function exportPoster(format) {
+        if (!network) return;
+        const isPDF = format === 'pdf';
+        const selects = root.querySelectorAll('.visnet-export-select');
+        const original = new Map();
+
+        selects.forEach(sel => {
+          const opt = sel.options[sel.selectedIndex];
+          original.set(sel, opt.text);
+          opt.text = 'Processing…';
+          sel.disabled = true;
+        });
+
+        if (spinner) {
+          spinner.style.display = 'block';
+          spinner.style.animation = 'visnet-pulse 2.2s ease-in-out infinite';
+          spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Rendering ${isPDF ? 'PDF' : 'PNG'}…`;
+        }
+
+        let hidden, expContainer, expNet, posterCanvas;
+
+        try {
+          const A1_W = 594, A1_H = 841, DPI = 300;
+          const px = DPI / 25.4;
+          const posterW = Math.round(A1_W * px);
+          const posterH = Math.round(A1_H * px);
+          const graphY = 0;
+          const graphH = posterH;
+
+          const positions = network.getPositions();
+          let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+          nodesDS.get().forEach(n => {
+            if (!positions[n.id]) return;
+            const pad = (n.size || 25) + 78;
+            minX = Math.min(minX, positions[n.id].x - pad);
+            maxX = Math.max(maxX, positions[n.id].x + pad);
+            minY = Math.min(minY, positions[n.id].y - pad);
+            maxY = Math.max(maxY, positions[n.id].y + pad);
+          });
+          if (!isFinite(minX)) {
+            minX = -1400; maxX = 1400; minY = -1400; maxY = 1400;
+          }
+
+          const gW = maxX - minX;
+          const gH = maxY - minY;
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          const margin = 0.025;
+          const scale = Math.min(
+            (posterW * (1 - margin * 2)) / gW,
+            (graphH  * (1 - margin * 2)) / gH
+          ) * 1.02;
+
+          hidden = document.createElement('div');
+          hidden.style.cssText = 'position:absolute;left:-99999px;top:-99999px;overflow:hidden';
+          document.body.appendChild(hidden);
+
+          expContainer = document.createElement('div');
+          expContainer.style.width  = posterW + 'px';
+          expContainer.style.height = graphH + 'px';
+          hidden.appendChild(expContainer);
+
+          const expData = {
+            nodes: new vis.DataSet(nodesDS.get().map(n => ({
+              ...n,
+              x: positions[n.id]?.x || 0,
+              y: positions[n.id]?.y || 0,
+              fixed: true,
+              opacity: 1
+            }))),
+            edges: new vis.DataSet(edgesDS.get())
+          };
+
+          expNet = new vis.Network(expContainer, expData, {
+            physics: { enabled: false },
+            nodes: {
+              shape: 'dot',
+              shadow: { enabled: true, size: 18 },
+              font: { size: 0 }
+            },
+            edges: {
+              smooth: { type: 'continuous', roundness: 0.35 },
+              color: { color: 'rgba(144,164,174,0.55)' },
+              width: 1.6
+            }
+          });
+
+          expNet.setSize(posterW + 'px', graphH + 'px');
+          expNet.on('afterDrawing', ctx => drawLabels(ctx, expNet, expData.nodes, true));
+
+          await new Promise(r => expNet.once('afterDrawing', r));
+          await new Promise(r => setTimeout(r, 150));
+
+          expNet.moveTo({ position: { x: cx, y: cy }, scale, animation: false });
+          await new Promise(r => expNet.once('afterDrawing', r));
+          await new Promise(r => setTimeout(r, 250));
+
+          const graphCanvas = expContainer.querySelector('canvas');
+          if (!graphCanvas) throw new Error('Canvas not found');
+
+          posterCanvas = document.createElement('canvas');
+          posterCanvas.width  = posterW;
+          posterCanvas.height = posterH;
+          const ctx = posterCanvas.getContext('2d', { alpha: false });
+
+          // Base
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, posterW, posterH);
+
+          const bgGrad = ctx.createRadialGradient(
+            posterW / 2, graphY + graphH / 2, 0,
+            posterW / 2, graphY + graphH / 2, Math.max(posterW, graphH) * 0.7
+          );
+          bgGrad.addColorStop(0, '#fbfdff');
+          bgGrad.addColorStop(1, '#f4f7fb');
+          ctx.fillStyle = bgGrad;
+          ctx.fillRect(0, graphY, posterW, graphH);
+
+          // Subtle grid
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, graphY, posterW, graphH);
+          ctx.clip();
+          ctx.strokeStyle = 'rgba(26,86,219,0.05)';
+          ctx.lineWidth = 3;
+          for (let x = 0; x <= posterW; x += 160) {
+            ctx.beginPath(); ctx.moveTo(x, graphY); ctx.lineTo(x, graphY + graphH); ctx.stroke();
+          }
+          for (let y = graphY; y <= graphY + graphH; y += 160) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(posterW, y); ctx.stroke();
+          }
+          ctx.restore();
+
+          // Graph
+          ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
+
+          // Outer frame
+          ctx.strokeStyle = 'rgba(15,23,42,0.18)';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
+
+          // Small footer title
+          ctx.fillStyle = 'rgba(15,23,42,0.45)';
+          ctx.font = '28px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Westmeath Arts & Creative Network', posterW / 2, posterH - 36);
+
+          if (isPDF) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a1' });
+            pdf.addImage(posterCanvas.toDataURL('image/jpeg', 0.97), 'JPEG', 0, 0, 594, 841);
+            pdf.save(`westmeath-arts-network-A1-${Date.now()}.pdf`);
+          } else {
+            const a = document.createElement('a');
+            a.download = `westmeath-arts-network-A1-${Date.now()}.png`;
+            a.href = posterCanvas.toDataURL('image/png', 1.0);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+        } catch (e) {
+          console.error('A1 Export Error:', e);
+          showError('Export failed. Please try again.');
+        } finally {
+          if (expNet) expNet.destroy();
+          if (hidden?.parentNode) hidden.parentNode.removeChild(hidden);
+
+          selects.forEach(sel => {
+            const opt = sel.options[sel.selectedIndex];
+            opt.text = original.get(sel) || opt.text;
+            sel.value = '';
+            sel.disabled = false;
+          });
+          if (spinner && !spinner.querySelector('.visnet-error-text')) {
+            spinner.style.display = 'none';
+          }
+        }
+      }
+
+      // ---------- Event listeners ----------
+      function setupListeners() {
+        root.querySelectorAll('.visnet-toggle-physics-btn')
+            .forEach(b => b.addEventListener('click', togglePhysics));
+
+        root.querySelectorAll('.visnet-fit-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            if (network) network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
+          });
+        });
+
+        root.querySelectorAll('.visnet-export-select').forEach(sel => {
+          sel.addEventListener('change', function () {
+            if (this.value) exportPoster(this.value);
+          });
+        });
+
+        root.querySelector('.visnet-fullscreen-btn')?.addEventListener('click', () => {
+          if (!isFullscreen()) {
+            container.requestFullscreen?.() ||
+            container.webkitRequestFullscreen?.() ||
+            container.msRequestFullscreen?.();
+          }
+        });
+
+        root.querySelector('.visnet-exit-fs-btn')?.addEventListener('click', () => {
+          document.exitFullscreen?.() ||
+          document.webkitExitFullscreen?.() ||
+          document.msExitFullscreen?.();
+        });
+
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+          .forEach(e => document.addEventListener(e, handleFSChange));
+
+        document.addEventListener('keydown', e => {
+          if (e.code === 'Space' && isFullscreen()) {
+            e.preventDefault();
+            togglePhysics();
+          }
+        }, { passive: false });
+
+        new ResizeObserver(() => {
+          if (network && !isPhysicsEnabled && !isFullscreen()) {
+            network.fit({ animation: true });
+          }
+        }).observe(container);
+      }
+
+      // ---------- Start ----------
+      try {
+        if (typeof vis === 'undefined') {
+          showError('vis-network library failed to load.');
+          return;
+        }
+        const data = buildGraph();
+        render(data);
+      } catch (err) {
+        console.error(err);
+        showError(err.message || 'Failed to build network');
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
