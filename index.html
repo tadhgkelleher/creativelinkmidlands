@@ -234,13 +234,13 @@ function buildGraph() {
   // Bigger nodes, scaled by connectivity
   nodes.forEach(n => {
     const tag = n.nodeType === 'tag';
-    n.size = Math.min(tag ? 48 : 64, (tag ? 20 : 28) + Math.log(1 + n.edgeCount) * (tag ? 11 : 13));
+    n.size = Math.min;
     n.mass = 1 + n.edgeCount * 0.35;
   });
 
   // Seed positions on a wide golden-angle spiral (not a ring) so physics starts untangled
   nodes.forEach((n, i) => {
-    const r = 140 * Math.sqrt(i + 1) * 1.6, a = i * 2.39996;
+    const r = 70 * Math.sqrt(i + 1), a = i * 2.39996;
     n.x = Math.cos(a) * r; n.y = Math.sin(a) * r;
   });
 
@@ -266,8 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let network, nodesDS, edgesDS;
   let focusSet = null;          // Set of node ids currently highlighted, or null
-  const lineCache = {};
-
+  
   const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
   const unlock = () => root.querySelectorAll('.visnet-btn, .visnet-select, .visnet-search').forEach(el => el.disabled = false);
 
@@ -276,50 +275,49 @@ document.addEventListener('DOMContentLoaded', function () {
     spinner.style.display = 'block';
   }
 
-  // ---------- Labels: drawn under each node, in graph units so they scale with zoom ----------
-  function wrap(ctx, id, text, font) {
-    const key = id + font;
-    if (lineCache[key]) return lineCache[key];
-    ctx.font = font;
-    const words = text.split(' '), lines = [];
-    let cur = '';
-    words.forEach(w => {
-      if (cur && ctx.measureText(cur + ' ' + w).width > 150) { lines.push(cur); cur = w; }
-      else cur = cur ? cur + ' ' + w : w;
-    });
-    lines.push(cur);
-    return (lineCache[key] = lines);
-  }
+  // ---------- Labels: constant on-screen size, collision-avoided, priority = hubs first ----------
+  function drawLabels(ctx, net, data, uiScale) {
+    const scale = net.getScale();
+    const pos = net.getPositions();
+    const items = [];
+    for (const id in pos) {
+      const n = data.get(id);
+      if (!n || (focusSet && !focusSet.has(id))) continue;
+      const hi = focusSet && focusSet.root === id;
+      items.push({ id, n, pri: (hi ? 1e6 : 0) + (n.nodeType === 'tag' ? n.edgeCount : 100 + n.size) });
+    }
+    items.sort((a, b) => b.pri - a.pri);
 
-  function drawLabels(ctx, net, data, isExport) {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.lineJoin = 'round';
-    const pos = net.getPositions();
-    const scale = isExport ? 1 : net.getScale();
-    // Keep text readable when zoomed out; tags drop out first
-    const boost = isExport ? 1 : Math.min(2.2, Math.max(1, 0.75 / scale));
-
-    for (const id in pos) {
-      const n = data.get(id);
-      if (!n) continue;
+    const placed = [];
+    items.forEach(({ id, n }) => {
       const tag = n.nodeType === 'tag';
-      if (tag && !isExport && scale < 0.32 && n.edgeCount < 4) continue;
-      const dim = focusSet && !focusSet.has(id);
-      const px = (tag ? 14 : 17) * boost;
-      const font = `${tag ? 500 : 700} ${px}px Inter, sans-serif`;
-      const lines = wrap(ctx, id + boost.toFixed(1), n.externalLabel, font);
-      ctx.font = font;
-      ctx.lineWidth = 4 * boost;
-      ctx.strokeStyle = 'rgba(255,255,255,0.92)';
-      ctx.fillStyle = dim ? 'rgba(100,116,139,0.35)' : (tag ? '#334155' : '#0f172a');
-      const y0 = pos[id].y + n.size + 5;
-      lines.forEach((l, i) => {
-        ctx.strokeText(l, pos[id].x, y0 + i * px * 1.2);
-        ctx.fillText(l, pos[id].x, y0 + i * px * 1.2);
+      const px = (tag ? 12.5 : 15.5) * uiScale / scale;      // graph units => fixed screen size
+      ctx.font = `${tag ? 500 : 700} ${px}px Inter, sans-serif`;
+      const maxW = 130 * uiScale / scale, lines = [];
+      let cur = '';
+      n.externalLabel.split(' ').forEach(w => {
+        if (cur && ctx.measureText(cur + ' ' + w).width > maxW) { lines.push(cur); cur = w; }
+        else cur = cur ? cur + ' ' + w : w;
       });
-    }
+      lines.push(cur);
+      const w = Math.max(...lines.map(l => ctx.measureText(l).width));
+      const h = lines.length * px * 1.2;
+      const x = pos[id].x, y = pos[id].y + n.size + 3 * uiScale / scale, pad = 3 * uiScale / scale;
+      const r = { l: x - w / 2 - pad, t: y - pad, r: x + w / 2 + pad, b: y + h + pad };
+      if (placed.some(q => r.l < q.r && r.r > q.l && r.t < q.b && r.b > q.t)) return;
+      placed.push(r);
+      ctx.lineWidth = 4 * uiScale / scale;
+      ctx.strokeStyle = 'rgba(255,255,255,0.93)';
+      ctx.fillStyle = tag ? '#334155' : '#0f172a';
+      lines.forEach((l, i) => {
+        ctx.strokeText(l, x, y + i * px * 1.2);
+        ctx.fillText(l, x, y + i * px * 1.2);
+      });
+    });
     ctx.restore();
   }
 
@@ -371,11 +369,11 @@ document.addEventListener('DOMContentLoaded', function () {
         enabled: true,
         solver: 'forceAtlas2Based',
         forceAtlas2Based: {
-          gravitationalConstant: -260,
-          centralGravity: 0.004,
-          springLength: 260,
-          springConstant: 0.05,
-          damping: 0.7,
+          gravitationalConstant: -120,
+          centralGravity: 0.02,
+          springLength: 150,
+          springConstant: 0.06,
+          damping: 0.6,
           avoidOverlap: 1
         },
         minVelocity: 0.75,
@@ -392,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
         width: 1.4,
         selectionWidth: 2.5
       },
-      interaction: { hover: true, tooltipDelay: 80, hideEdgesOnDrag: false, zoomSpeed: 0.6 }
+      interaction: { hover: true, tooltipDelay: 80, hideEdgesOnDrag: false, zoomSpeed: 0.7 }
     });
 
     // Layout settles once, then freezes: nothing moves unless you drag a node.
@@ -406,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function () {
       spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Laying out network… ${Math.round(p.iterations / p.total * 100)}%`;
     });
 
-    network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
+    network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, 1));
 
     network.on('click', p => {
       if (p.nodes.length) focusOn(p.nodes[0]);
@@ -464,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
         edges: { smooth: false }
       });
       expNet.setSize(posterW + 'px', posterH + 'px');
-      expNet.on('afterDrawing', ctx => drawLabels(ctx, expNet, expNodes, true));
+      expNet.on('afterDrawing', ctx => drawLabels(ctx, expNet, expNodes, posterW / 1300));
       await new Promise(r => setTimeout(r, 200));
       expNet.moveTo({ position: { x: cx, y: cy }, scale, animation: false });
       await new Promise(r => setTimeout(r, 400));
