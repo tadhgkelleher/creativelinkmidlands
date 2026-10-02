@@ -302,8 +302,8 @@
       position: absolute;
       bottom: 18px;
       right: 18px;
-      background: rgba(255, 255, 255, 0.96);
-      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.97);
+      padding: 12px 14px;
       border-radius: 10px;
       font-size: 12.5px;
       font-weight: 500;
@@ -311,7 +311,7 @@
       box-shadow: var(--shadow-md);
       backdrop-filter: blur(6px);
       border: 1px solid var(--border);
-      min-width: 150px;
+      width: 210px;
       max-height: 55vh;
       overflow-y: auto;
     }
@@ -320,15 +320,16 @@
       font-weight: 700;
       font-size: 10.5px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin: 8px 0 8px;
       color: #64748b;
       letter-spacing: 0.06em;
     }
+    .visnet-legend .legend-title:first-child { margin-top: 0; }
 
     .visnet-legend-item {
       display: flex;
       align-items: center;
-      margin-bottom: 7px;
+      margin-bottom: 6px;
       color: #334155;
     }
 
@@ -342,6 +343,41 @@
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
       flex-shrink: 0;
     }
+
+    .visnet-legend-search {
+      width: 100%;
+      padding: 7px 10px 7px 30px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1.5px solid #c7d2fe;
+      color: var(--blue-text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 9px center;
+      outline: none;
+      margin-bottom: 4px;
+    }
+    .visnet-legend-search:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.12);
+    }
+    .visnet-legend-hits {
+      list-style: none;
+      margin: 0 0 6px;
+      padding: 0;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .visnet-legend-hits li {
+      padding: 5px 6px;
+      font-size: 11.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #334155;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .visnet-legend-hits li:hover { background: var(--blue-soft); color: var(--blue-text); }
 
     .visnet-stats {
       text-align: center;
@@ -393,14 +429,15 @@
 <body>
   <div class="page-header">
     <h1>Westmeath Arts &amp; Creative Network</h1>
-    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 2-hop path (the node, its connections, and everything those connections touch). Click a link to highlight the nodes it joins and their neighbours. Click empty space to reset.</p>
+    <p>Interactive network map of artists, organisations, venues and skills across Westmeath. <strong>Click a node</strong> to illuminate its 3-hop path. Use the search box or legend search to find someone. Click a link to highlight related nodes. Click empty space to reset.</p>
   </div>
 
   <div id="visnet-root">
     <div class="visnet-controls">
-      <button type="button" class="visnet-toggle-physics-btn visnet-btn" disabled>
-        <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
-      </button>
+      <div class="visnet-search-wrap">
+        <input type="search" class="visnet-search-input" placeholder="Search people, venues, skills…" aria-label="Search network" autocomplete="off" disabled />
+        <ul class="visnet-search-results" role="listbox"></ul>
+      </div>
       <button type="button" class="visnet-fit-btn visnet-btn" disabled>
         <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
       </button>
@@ -418,14 +455,8 @@
       <div class="visnet-loading-spinner">
         <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Building network…
       </div>
-      <div class="visnet-fs-instruction">
-        <i class="fas fa-magic" aria-hidden="true"></i> Press Spacebar to toggle layout
-      </div>
       <div class="visnet-legend"></div>
       <div class="visnet-fullscreen-controls">
-        <button type="button" class="visnet-toggle-physics-btn visnet-btn">
-          <i class="fas fa-arrows-alt" aria-hidden="true"></i> Toggle Layout
-        </button>
         <button type="button" class="visnet-fit-btn visnet-btn">
           <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i> Fit View
         </button>
@@ -544,25 +575,25 @@
       'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Calmer, gentler physics configuration (High damping, fast settling, minimal drift)
+    // Fast-settling physics (high damping, low velocities, quick stabilisation)
     const CALM_PHYSICS = {
       enabled: true,
       solver: 'forceAtlas2Based',
       forceAtlas2Based: {
-        gravitationalConstant: -35,
-        centralGravity: 0.012,
-        springLength: 145,
-        springConstant: 0.055,
-        damping: 0.95,         // Very high damping — almost no residual bounce
-        avoidOverlap: 0.9
+        gravitationalConstant: -32,
+        centralGravity: 0.015,
+        springLength: 140,
+        springConstant: 0.07,
+        damping: 0.97,
+        avoidOverlap: 0.85
       },
-      minVelocity: 1.4,        // Stops simulation as soon as motion is tiny
-      maxVelocity: 12,         // Hard cap on speed to prevent jitter
-      timestep: 0.35,
+      minVelocity: 2.5,
+      maxVelocity: 10,
+      timestep: 0.45,
       stabilization: {
         enabled: true,
-        iterations: 550,       // Extra iterations for a settled layout before reveal
-        updateInterval: 40,
+        iterations: 280,
+        updateInterval: 25,
         fit: true
       }
     };
@@ -737,18 +768,17 @@
       const container   = root.querySelector('.visnet-container');
       const spinner     = root.querySelector('.visnet-loading-spinner');
       const legendEl    = root.querySelector('.visnet-legend');
-      const instruction = root.querySelector('.visnet-fs-instruction');
       const fsControls  = root.querySelector('.visnet-fullscreen-controls');
       const statsEl     = document.getElementById('visnet-stats');
+      const searchInput = root.querySelector('.visnet-search-input');
+      const searchResults = root.querySelector('.visnet-search-results');
 
       let network, nodesDS, edgesDS;
-      let isPhysicsEnabled = true;
-      let isToggling = false;
-      let wasPhysicsBeforeFS = true;
       let textCache = {};
+      let searchIndex = []; // { id, label, type, color }
 
       function unlock() {
-        root.querySelectorAll('.visnet-btn, .visnet-select').forEach(el => { el.disabled = false; });
+        root.querySelectorAll('.visnet-btn, .visnet-select, .visnet-search-input').forEach(el => { el.disabled = false; });
       }
 
       function showError(msg) {
@@ -876,6 +906,36 @@
         })));
       }
 
+      // Highlight N-hop neighbourhood around a node
+      function highlightNodePath(selectedId, hops) {
+        if (!edgesDS || !nodesDS) return;
+        const litNodeIds = new Set([selectedId]);
+        const litEdgeIds = new Set();
+        const adj = {};
+        edgesDS.get().forEach(e => {
+          if (!adj[e.from]) adj[e.from] = [];
+          if (!adj[e.to]) adj[e.to] = [];
+          adj[e.from].push({ node: e.to, edge: e.id });
+          adj[e.to].push({ node: e.from, edge: e.id });
+        });
+        const queue = [[selectedId, 0]];
+        while (queue.length) {
+          const [cur, depth] = queue.shift();
+          if (depth >= hops) continue;
+          for (const { node, edge } of (adj[cur] || [])) {
+            litEdgeIds.add(edge);
+            if (!litNodeIds.has(node)) {
+              litNodeIds.add(node);
+              queue.push([node, depth + 1]);
+            }
+          }
+        }
+        edgesDS.get().forEach(e => {
+          if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) litEdgeIds.add(e.id);
+        });
+        applyHighlight(litNodeIds, litEdgeIds, null);
+      }
+
       // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
         // Update nodes
@@ -918,17 +978,22 @@
       function render(data) {
         textCache = {};
 
-        let initial = data.nodes;
-        if (isPhysicsEnabled) {
-          initial = initial.map(n => {
-            const c = { ...n, fixed: false };
-            delete c.x; delete c.y;
-            return c;
-          });
-        }
+        const initial = data.nodes.map(n => {
+          const c = { ...n, fixed: false };
+          delete c.x; delete c.y;
+          return c;
+        });
 
         nodesDS = new vis.DataSet(initial);
         edgesDS = new vis.DataSet(data.edges);
+
+        // Build search index
+        searchIndex = data.nodes.map(n => ({
+          id: n.id,
+          label: n.externalLabel || n.label || n.id,
+          type: n.nodeType === 'tag' ? 'Skill' : (n.nodeType === 'person' ? 'Person' : 'Venue'),
+          color: (n.originalColor && n.originalColor.background) || (n.color && n.color.background) || '#90A4AE'
+        })).sort((a, b) => a.label.localeCompare(b.label));
 
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
           physics: CALM_PHYSICS,
@@ -952,7 +1017,7 @@
         });
 
         network.once('stabilizationIterationsDone', () => {
-          network.setOptions({ physics: { enabled: isPhysicsEnabled } });
+          network.setOptions({ physics: { enabled: true } });
         });
 
         network.once('afterDrawing', () => {
@@ -960,9 +1025,11 @@
           unlock();
         });
 
-        // Legend
+        // Legend + embedded search
         if (data.legend && legendEl) {
-          let html = '<div class="legend-title">Legend</div>';
+          let html = '<input type="search" class="visnet-legend-search" placeholder="Search…" aria-label="Search in legend" autocomplete="off" />';
+          html += '<ul class="visnet-legend-hits"></ul>';
+          html += '<div class="legend-title">Legend</div>';
           for (const [type, color] of Object.entries(data.legend)) {
             html += `<div class="visnet-legend-item">
                        <span class="visnet-legend-color" style="background:${color}"></span>
@@ -981,47 +1048,39 @@
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
+        // Shared: highlight N-hop neighbourhood around a node
+        function highlightNodePath(selectedId, hops) {
+          const litNodeIds = new Set([selectedId]);
+          const litEdgeIds = new Set();
+          const adj = {};
+          edgesDS.get().forEach(e => {
+            if (!adj[e.from]) adj[e.from] = [];
+            if (!adj[e.to]) adj[e.to] = [];
+            adj[e.from].push({ node: e.to, edge: e.id });
+            adj[e.to].push({ node: e.from, edge: e.id });
+          });
+          const queue = [[selectedId, 0]];
+          while (queue.length) {
+            const [cur, depth] = queue.shift();
+            if (depth >= hops) continue;
+            for (const { node, edge } of (adj[cur] || [])) {
+              litEdgeIds.add(edge);
+              if (!litNodeIds.has(node)) {
+                litNodeIds.add(node);
+                queue.push([node, depth + 1]);
+              }
+            }
+          }
+          edgesDS.get().forEach(e => {
+            if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) litEdgeIds.add(e.id);
+          });
+          applyHighlight(litNodeIds, litEdgeIds, null);
+        }
+
         // Click interaction: Node, Link or Background
         network.on('click', params => {
           if (params.nodes.length > 0) {
-            // Node clicked: 2-hop neighbourhood
-            // selected → its neighbours → the nodes connected to those neighbours
-            const selectedId = params.nodes[0];
-            const litNodeIds = new Set([selectedId]);
-            const litEdgeIds = new Set();
-
-            // Build adjacency list (node → [{node, edge}, …])
-            const adj = {};
-            edgesDS.get().forEach(e => {
-              if (!adj[e.from]) adj[e.from] = [];
-              if (!adj[e.to]) adj[e.to] = [];
-              adj[e.from].push({ node: e.to, edge: e.id });
-              adj[e.to].push({ node: e.from, edge: e.id });
-            });
-
-            // BFS limited to 2 hops
-            const queue = [[selectedId, 0]];
-            while (queue.length) {
-              const [cur, depth] = queue.shift();
-              if (depth >= 2) continue;
-              const neighbours = adj[cur] || [];
-              for (const { node, edge } of neighbours) {
-                litEdgeIds.add(edge);
-                if (!litNodeIds.has(node)) {
-                  litNodeIds.add(node);
-                  queue.push([node, depth + 1]);
-                }
-              }
-            }
-
-            // Keep edges that run between any two lit nodes (closes the subgraph)
-            edgesDS.get().forEach(e => {
-              if (litNodeIds.has(e.from) && litNodeIds.has(e.to)) {
-                litEdgeIds.add(e.id);
-              }
-            });
-
-            applyHighlight(litNodeIds, litEdgeIds, null);
+            highlightNodePath(params.nodes[0], 3);
           } else if (params.edges.length > 0) {
             // LINK CLICKED:
             // Light up its connected nodes, PLUS all other nodes that connect to them!
@@ -1056,62 +1115,55 @@
         setupListeners();
       }
 
-      function redrawCircular() {
-        if (!network || !nodesDS) return;
-        const ids = nodesDS.getIds();
-        const step = ids.length ? (2 * Math.PI) / ids.length : 0;
-        const r = 820;
-        const updates = ids.map((id, i) => ({
-          id,
-          x: Math.cos(i * step) * r,
-          y: Math.sin(i * step) * r,
-          fixed: { x: true, y: true }
-        }));
-        nodesDS.update(updates);
-        network.moveTo({ position: { x: 0, y: 0 }, scale: 1, animation: false });
-        network.fit({ animation: true });
-      }
-
-      function togglePhysics() {
-        if (isToggling || !network) return;
-        isToggling = true;
-        isPhysicsEnabled = !isPhysicsEnabled;
-
-        const icon = isPhysicsEnabled ? 'fa-arrows-alt' : 'fa-circle-notch';
-        root.querySelectorAll('.visnet-toggle-physics-btn').forEach(b => {
-          b.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i> Toggle Layout`;
-        });
-
-        if (isPhysicsEnabled) {
-          network.setOptions({ physics: CALM_PHYSICS });
-          nodesDS.update(nodesDS.getIds().map(id => ({ id, fixed: false })));
-        } else {
-          network.setOptions({ physics: { enabled: false } });
-          redrawCircular();
-        }
-        setTimeout(() => { isToggling = false; }, 600);
-      }
-
       function handleFSChange() {
-        const fs = isFullscreen();
-        if (fsControls) fsControls.style.display = fs ? 'flex' : 'none';
+        if (fsControls) fsControls.style.display = isFullscreen() ? 'flex' : 'none';
+      }
 
-        if (fs) {
-          if (instruction) {
-            instruction.style.display = 'block';
-            instruction.style.opacity = '1';
-            setTimeout(() => { instruction.style.opacity = '0'; }, 4000);
-          }
-          wasPhysicsBeforeFS = isPhysicsEnabled;
-          if (!isPhysicsEnabled) togglePhysics();
-        } else {
-          if (instruction) instruction.style.display = 'none';
-          if (isPhysicsEnabled !== wasPhysicsBeforeFS) {
-            togglePhysics();
-          } else if (!isPhysicsEnabled) {
-            redrawCircular();
-          }
+      function focusNode(id) {
+        if (!network || !nodesDS.get(id)) return;
+        highlightNodePath(id, 3);
+        network.focus(id, {
+          scale: 1.15,
+          animation: { duration: 450, easingFunction: 'easeInOutQuad' }
+        });
+      }
+
+      function runSearch(query, listEl, isLegend) {
+        const q = (query || '').trim().toLowerCase();
+        if (!listEl) return;
+        if (!q) {
+          listEl.innerHTML = '';
+          if (!isLegend) listEl.classList.remove('open');
+          return;
         }
+        const hits = searchIndex.filter(n => n.label.toLowerCase().includes(q)).slice(0, 18);
+        if (!hits.length) {
+          listEl.innerHTML = isLegend
+            ? '<li class="visnet-search-empty" style="cursor:default">No matches</li>'
+            : '<li class="visnet-search-empty">No matches</li>';
+          if (!isLegend) listEl.classList.add('open');
+          return;
+        }
+        listEl.innerHTML = hits.map(h =>
+          `<li data-id="${h.id}" role="option">
+            <span class="result-dot" style="background:${h.color}"></span>
+            <span>${h.label}</span>
+            ${isLegend ? '' : `<span class="result-type">${h.type}</span>`}
+          </li>`
+        ).join('');
+        if (!isLegend) listEl.classList.add('open');
+        listEl.querySelectorAll('li[data-id]').forEach(li => {
+          li.addEventListener('click', () => {
+            focusNode(li.getAttribute('data-id'));
+            if (searchInput) searchInput.value = li.querySelector('span:nth-child(2)')?.textContent || '';
+            listEl.innerHTML = '';
+            if (!isLegend) listEl.classList.remove('open');
+            const legendHits = legendEl?.querySelector('.visnet-legend-hits');
+            if (legendHits) legendHits.innerHTML = '';
+            const legendSearch = legendEl?.querySelector('.visnet-legend-search');
+            if (legendSearch) legendSearch.value = '';
+          });
+        });
       }
 
       // High-res A1 Export
