@@ -298,7 +298,7 @@
 
     .visnet-error-text { color: #dc2626; font-weight: 600; }
 
-    /* Interactive Docked Legend Panel */
+    /* Interactive Docked Legend */
     .visnet-legend-panel {
       position: absolute;
       bottom: 14px;
@@ -573,77 +573,6 @@
       { name: "Westmeath community arts spaces", about: "community arts, workshops, exhibitions, participation, local cultural activity", contact: "", kind: "venue" }
     ];
 
-    // ====================================================================
-    // SINGULAR HUB TAXONOMY (Merges doubles & phrases into clean singulars)
-    // ====================================================================
-    function toSingularHub(rawStr) {
-      const s = rawStr.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
-
-      // Community
-      if (s.includes('community') || s.includes('inclusion') || s.includes('participation')) return 'Community';
-
-      // Events / Festivals
-      if (s.includes('festival') || s.includes('event') || s.includes('culture night')) return 'Events';
-
-      // Exhibitions / Galleries
-      if (s.includes('exhibit') || s.includes('gallery')) return 'Exhibitions';
-
-      // Studios / Workspaces
-      if (s.includes('studio') || s.includes('workspace')) return 'Studios';
-
-      // Visual Art & Painting
-      if (s.includes('paint')) return 'Painting';
-      if (s.includes('draw') || s.includes('illustrat')) return 'Illustration';
-      if (s.includes('animation')) return 'Animation';
-      if (s.includes('mural') || s.includes('public art') || s.includes('installation') || s.includes('eco art') || s.includes('sign writing')) return 'Public Art';
-      if (s.includes('visual art') || s.includes('arts') || s.includes('mixed media') || s.includes('children')) return 'Visual Art';
-
-      // Craft & Making
-      if (s.includes('sculpt') || s.includes('stone') || s.includes('carving') || s.includes('walling')) return 'Sculpture';
-      if (s.includes('metal') || s.includes('pewter')) return 'Metalwork';
-      if (s.includes('crochet') || s.includes('weav') || s.includes('textile') || s.includes('spinn') || s.includes('dye')) return 'Textiles';
-      if (s.includes('craft') || s.includes('diy') || s.includes('irish-made')) return 'Craft';
-
-      // Theatre & Performance
-      if (s.includes('theatre') || s.includes('drama')) return 'Theatre';
-      if (s.includes('puppet') || s.includes('storytelling')) return 'Storytelling';
-      if (s.includes('direct') || s.includes('produc')) return 'Directing';
-      if (s.includes('stage') || s.includes('mc')) return 'Stage';
-      if (s.includes('perform') || s.includes('comedy')) return 'Performance';
-
-      // Music & Sound
-      if (s.includes('traditional music') || s.includes('song') || s.includes('comhaltas')) return 'Trad Music';
-      if (s.includes('record') || s.includes('sound') || s.includes('music product')) return 'Recording';
-      if (s.includes('music')) return 'Music';
-
-      // Dance
-      if (s.includes('dance') || s.includes('choreograph') || s.includes('céilí')) return 'Dance';
-
-      // Words & Literature
-      if (s.includes('poet') || s.includes('spoken word')) return 'Poetry';
-      if (s.includes('writ') || s.includes('literat')) return 'Literature';
-
-      // Heritage & History
-      if (s.includes('museum') || s.includes('collection')) return 'Museum';
-      if (s.includes('heritage') || s.includes('history') || s.includes('castle') || s.includes('barracks') || s.includes('transmission')) return 'Heritage';
-      if (s.includes('architect') || s.includes('garden') || s.includes('outdoor') || s.includes('waterfront') || s.includes('quarter')) return 'Outdoors';
-
-      // Media
-      if (s.includes('radio') || s.includes('broadcast')) return 'Radio';
-      if (s.includes('media')) return 'Media';
-
-      // Film
-      if (s.includes('film') || s.includes('cinema') || s.includes('screen')) return 'Film';
-
-      // Learning & Development
-      if (s.includes('workshop') || s.includes('class') || s.includes('talk')) return 'Workshops';
-      if (s.includes('educat') || s.includes('youth')) return 'Education';
-      if (s.includes('policy') || s.includes('funding') || s.includes('admin') || s.includes('enterprise') || s.includes('development')) return 'Development';
-      if (s.includes('photo') || s.includes('cyanotype')) return 'Photography';
-
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    }
-
     const COLORS = {
       person: { background: '#FF6F61', border: '#D32F2F' },
       venue:  { background: '#5C6BC0', border: '#3949AB' },
@@ -662,22 +591,23 @@
       'Events & Festivals':    { background: '#EF4444', border: '#DC2626' },
       'Dance':                 { background: '#EC407A', border: '#C2185B' },
       'Film & Screen':         { background: '#26A69A', border: '#00897B' },
-      'Public & Outdoors':     { background: '#66BB6A', border: '#43A047' },
+      'Public & Outdoor':      { background: '#66BB6A', border: '#43A047' },
       'Enterprise & Admin':    { background: '#7E57C2', border: '#5E35B1' },
       'Other':                 { background: '#90A4AE', border: '#607D8B' }
     };
 
+    // FAST RESOLVING BARNES-HUT PHYSICS
     const FAST_PHYSICS = {
       enabled: true,
       solver: 'barnesHut',
       barnesHut: {
         theta: 0.5,
-        gravitationalConstant: -3200,
-        centralGravity: 0.22,
-        springLength: 105,
+        gravitationalConstant: -2600,
+        centralGravity: 0.2,
+        springLength: 95,
         springConstant: 0.05,
         damping: 0.8,
-        avoidOverlap: 0.3
+        avoidOverlap: 0.2
       },
       stabilization: {
         enabled: true,
@@ -687,58 +617,26 @@
       }
     };
 
-    function getSector(hub) {
-      switch (hub) {
-        case 'Visual Art':
-        case 'Painting':
-        case 'Illustration':
-        case 'Animation':
-        case 'Public Art':
-        case 'Exhibitions':
-        case 'Studios':
-        case 'Photography':
-          return 'Visual Art';
-        case 'Craft':
-        case 'Sculpture':
-        case 'Metalwork':
-        case 'Textiles':
-          return 'Craft & Making';
-        case 'Theatre':
-        case 'Performance':
-        case 'Storytelling':
-        case 'Directing':
-        case 'Stage':
-          return 'Performing Arts';
-        case 'Music':
-        case 'Trad Music':
-        case 'Recording':
-          return 'Music';
-        case 'Dance':
-          return 'Dance';
-        case 'Literature':
-        case 'Poetry':
-          return 'Literature & Words';
-        case 'Community':
-        case 'Workshops':
-        case 'Education':
-          return 'Community & Education';
-        case 'Heritage':
-        case 'Museum':
-          return 'Heritage & Museums';
-        case 'Outdoors':
-          return 'Public & Outdoors';
-        case 'Radio':
-        case 'Media':
-          return 'Media & Broadcast';
-        case 'Events':
-          return 'Events & Festivals';
-        case 'Film':
-          return 'Film & Screen';
-        case 'Development':
-          return 'Enterprise & Admin';
-        default:
-          return 'Other';
-      }
+    function getSector(tag) {
+      const t = tag.toLowerCase();
+      if (/visual art|painting|oil painting|drawing|illustration|gallery|exhibitions|public art|installation|murals|sign writing|cyanotype|2d animation|contemporary visual|mixed media|children.?s art|eco art|natural dyes|artist studio|creative workspace|atrium|sculpture/.test(t)) return 'Visual Art';
+      if (/craft|crochet|weaving|spinning|willow|textiles|metalwork|pewter|dry stone|letter carving|stone carving|diy|irish-made|irish craft/.test(t)) return 'Craft & Making';
+      if (/theatre|drama|puppetry|storytelling|directing|producing|site-specific|digital theatre|comedy|performance(?! dance)|stage management|mc/.test(t)) return 'Performing Arts';
+      if (/music|recording|song|traditional music|sound engineering|comhaltas|music generation|music production|residential recording/.test(t)) return 'Music';
+      if (/writing|literature|poetry|spoken word|storytelling/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
+      if (/community|education|youth|workshops|classes|talks|inclusion|participation|artist support|funding|policy|cultural programming|creative development|creativity|administration/.test(t)) return 'Community & Education';
+      if (/heritage|museum|castle|history|military|interpretation|local history|collections|barracks|belvedere|moate|athlone castle/.test(t)) return 'Heritage & Museums';
+      if (/radio|broadcast|media|social media|sound engineering/.test(t)) return 'Media & Broadcast';
+      if (/festival|events|event promotion|event décor|culture night|cultural events|cultural activity/.test(t)) return 'Events & Festivals';
+      if (/dance|choreography|dance teaching|céilí/.test(t)) return 'Dance';
+      if (/film|cinema|screen/.test(t)) return 'Film & Screen';
+      if (/outdoor|gardens|public art|waterfront|cultural quarter|architecture/.test(t)) return 'Public & Outdoor';
+      if (/enterprise|creative businesses|incubation|arts development|westmeath arts|westmeath culture|creative ireland/.test(t)) return 'Enterprise & Admin';
+      return 'Other';
+    }
+
+    function normTag(s) {
+      return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
     function decodeEntities(txt) {
@@ -768,7 +666,7 @@
           originalColor: color,
           nodeType: type,
           shape: 'dot',
-          size: type === 'tag' ? 15 : 22,
+          size: type === 'tag' ? 14 : 22,
           borderWidth: 1,
           mass: 1,
           opacity: 1,
@@ -810,21 +708,18 @@
           about: item.about
         });
 
-        // Split, merge doubles to singular, and deduplicate
-        const rawTags = item.about.split(',').filter(Boolean);
-        const singularHubs = new Set(rawTags.map(toSingularHub));
-
-        singularHubs.forEach(hub => {
-          let tid = tagIdMap[hub];
-          const sector = getSector(hub);
+        const tags = item.about.split(',').map(t => normTag(t)).filter(Boolean);
+        tags.forEach(tag => {
+          let tid = tagIdMap[tag];
+          const sector = getSector(tag);
           sectorCounts[sector] = (sectorCounts[sector] || 0) + 1;
-
           if (!tid) {
             tid = 'tag_' + Object.keys(tagIdMap).length;
-            tagIdMap[hub] = tid;
+            tagIdMap[tag] = tid;
             const col = SECTOR_COLORS[sector] || SECTOR_COLORS['Other'];
-            addNode(tid, hub, 'tag', col, {
-              title: `Practice Hub: ${hub}\nSector: ${sector}`,
+            const display = tag.replace(/\b\w/g, c => c.toUpperCase());
+            addNode(tid, display, 'tag', col, {
+              title: `Skill: ${display}\nSector: ${sector}`,
               sector
             });
           }
@@ -832,16 +727,16 @@
         });
       });
 
-      // Sizes and initial radial coordinates
+      // Sizes and initial radial dispersal coordinates (makes solver resolve in <150ms)
       const total = nodes.length;
       const step = (2 * Math.PI) / (total || 1);
       nodes.forEach((n, i) => {
-        const base = n.nodeType === 'tag' ? 14 : 18;
-        n.size = Math.min(n.nodeType === 'tag' ? 40 : 52, base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 8 : 10));
-        n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.7 : 1.1));
+        const base = n.nodeType === 'tag' ? 12 : 18;
+        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10));
+        n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
 
-        const rad = n.nodeType === 'tag' ? 320 : 580;
+        const rad = n.nodeType === 'tag' ? 380 : 650;
         n.x = Math.cos(i * step) * rad;
         n.y = Math.sin(i * step) * rad;
       });
@@ -1022,7 +917,7 @@
         applyHighlight(litNodeIds, litEdgeIds, null);
       }
 
-      // LEGEND FILTERING
+      // LEGEND FILTERING LOGIC
       function highlightCategoryOrSector(key, type) {
         if (activeLegendFilter === key) {
           resetHighlight();
@@ -1039,6 +934,7 @@
         const litEdgeIds = new Set();
 
         if (type === 'kind') {
+          // Highlight entities of this type + directly connected skills
           nodesDS.get().forEach(n => {
             if (n.nodeType === key) {
               targetNodes.add(n.id);
@@ -1055,6 +951,7 @@
             }
           });
         } else if (type === 'sector') {
+          // Highlight skills in this sector + directly connected artists and venues
           nodesDS.get().forEach(n => {
             if (n.sector === key) {
               targetNodes.add(n.id);
@@ -1100,6 +997,7 @@
         if (!legendContent) return;
         let html = '';
 
+        // Entity section
         html += `<div class="visnet-legend-section">
                   <div class="visnet-legend-title">Entities (Click to Filter)</div>
                   <div class="visnet-legend-item" data-key="person" data-type="kind">
@@ -1114,8 +1012,9 @@
                   </div>
                 </div>`;
 
+        // Sector section
         html += `<div class="visnet-legend-section">
-                  <div class="visnet-legend-title">Practice &amp; Sector</div>`;
+                  <div class="visnet-legend-title">Sectors &amp; Skills</div>`;
 
         Object.keys(SECTOR_COLORS).forEach(sector => {
           const count = data.sectorCounts[sector] || 0;
@@ -1131,9 +1030,10 @@
 
         legendContent.innerHTML = html;
 
+        // Click handlers on legend items
         legendContent.querySelectorAll('.visnet-legend-item').forEach(item => {
           item.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Prevents canvas click handler from clearing highlight
             const key = item.getAttribute('data-key');
             const type = item.getAttribute('data-type');
             highlightCategoryOrSector(key, type);
@@ -1149,7 +1049,7 @@
         searchIndex = data.nodes.map(n => ({
           id: n.id,
           label: n.externalLabel || n.id,
-          type: n.nodeType === 'tag' ? 'Practice' : (n.nodeType === 'person' ? 'Person' : 'Venue'),
+          type: n.nodeType === 'tag' ? 'Skill' : (n.nodeType === 'person' ? 'Person' : 'Venue'),
           color: (n.originalColor && n.originalColor.background) || '#90A4AE'
         })).sort((a, b) => a.label.localeCompare(b.label));
 
@@ -1173,6 +1073,7 @@
           }
         });
 
+        // Stops physics instantly upon completion (settles in <150ms)
         function finalizeSettling() {
           network.setOptions({ physics: { enabled: false } });
           if (spinner) spinner.style.display = 'none';
@@ -1180,17 +1081,18 @@
         }
 
         network.once('stabilizationIterationsDone', finalizeSettling);
-        setTimeout(finalizeSettling, 250);
+        setTimeout(finalizeSettling, 250); // Fallback guarantee
 
         buildLegendUI(data);
 
         if (statsEl && data.stats) {
           const s = data.stats;
-          statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} practice hubs  ·  ${s.connections} connections`;
+          statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
         }
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
 
+        // Click interaction: Node (2 hops), Link, or Reset
         network.on('click', params => {
           if (params.nodes.length > 0) {
             highlightNodePath(params.nodes[0], 2);
@@ -1397,6 +1299,7 @@
       }
 
       function setupListeners() {
+        // Prevent events inside legend panel from reaching the vis.js canvas
         if (legendPanel) {
           ['click', 'mousedown', 'pointerdown', 'touchstart', 'dblclick'].forEach(evt => {
             legendPanel.addEventListener(evt, e => e.stopPropagation());
