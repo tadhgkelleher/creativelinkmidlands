@@ -916,10 +916,9 @@
 
     function getSector(tag) {
       const t = tag.toLowerCase();
-      // RegEx updated to gracefully map newly consolidated nodes to proper color groups
-      if (/visual art|painting|drawing|illustration|animation|gallery|exhibition|public art|installation|mural|signwriting|cyanotype|mixed media|children.?s art|eco art|natural.*art/.test(t)) return 'Visual Art';
+      if (/visual art|painting|drawing|illustration|animation|gallery|exhibition|public art|installation|mural|signwriting|cyanotype|mixed media|children.?s art|eco art|natural.*art|sculpture|photograph|studio/.test(t)) return 'Visual Art';
       if (/craft|crochet|weaving|spinning|textile|metalwork|pewter|stone|diy|irish-made/.test(t)) return 'Craft & Making';
-      if (/theatre|drama|puppetry|storytelling|directing|producing|comedy|performance|stage management|mc/.test(t)) return 'Performing Arts';
+      if (/theatre|drama|puppetry|storytelling|directing|producing|comedy|performance|mc/.test(t)) return 'Performing Arts';
       if (/music|recording|song|sound engineering|comhaltas/.test(t)) return 'Music';
       if (/writing|literature|poetry|spoken word/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
       if (/community|education|youth|workshops|classes|talks|inclusion|participation|artist support|funding|policy|cultural programming|creative development|creativity|administration/.test(t)) return 'Community & Education';
@@ -937,32 +936,35 @@
       return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
-    // Merge only true near-duplicates / synonym phrases (keep distinct practices separate)
+    // Merge only true near-duplicates / synonym phrases (keep distinct disciplines separate)
     const TAG_MERGE = {
       // Visual Art
       'oil painting': 'painting',
       'contemporary visual art': 'visual art',
-      'art gallery': 'gallery',
-      'natural dyes': 'natural / eco art',
-      'eco art': 'natural / eco art',
-      'illustration': 'illustration / animation',
-      '2d animation': 'illustration / animation',
-      'sign writing': 'signwriting',
       'art': 'visual art',
       'arts': 'visual art',
       'multidisciplinary arts': 'visual art',
+      'art gallery': 'gallery',
+      'illustration': 'illustration / animation',
+      '2d animation': 'illustration / animation',
+      'natural dyes': 'natural / eco art',
+      'eco art': 'natural / eco art',
+      'sign writing': 'signwriting',
+      'artist studio': 'artist studios',
+      'creative studios': 'artist studios',
+      'creative workspace': 'artist studios',
 
-      // Craft
+      // Craft & Making
+      'irish craft': 'craft',
+      'traditional craft': 'craft',
+      'irish-made work': 'craft',
+      'craft production': 'craft',
       'weaving': 'textiles',
       'spinning': 'textiles',
       'willow weaving': 'textiles',
       'stone carving': 'stonework / stone carving',
       'letter carving': 'stonework / stone carving',
       'dry stone walling': 'stonework / stone carving',
-      'irish craft': 'craft',
-      'traditional craft': 'craft',
-      'irish-made work': 'craft',
-      'craft production': 'craft',
 
       // Theatre & Performance
       'site-specific theatre': 'theatre',
@@ -998,12 +1000,12 @@
       'event décor': 'event management',
       'stage management': 'event management',
       'outdoor events': 'event management',
+      'outdoor cultural activity': 'event management',
+      'outdoor cultural events': 'event management',
       'community and cultural events': 'cultural events',
       'community events': 'cultural events',
       'cultural activity': 'cultural events',
       'multidisciplinary cultural activity': 'cultural events',
-      'outdoor cultural activity': 'event management',
-      'outdoor cultural events': 'event management',
 
       // Heritage
       'military heritage': 'heritage',
@@ -1028,12 +1030,9 @@
       // Enterprise, Education & Spaces
       'creative businesses': 'creative development',
       'arts development': 'creative development',
-      'youth': 'youth arts / youth',
+      'youth': 'youth arts',
       'gardening': 'gardens / horticulture',
       'gardens': 'gardens / horticulture',
-      'artist studio': 'artist studios',
-      'creative studios': 'artist studios',
-      'creative workspace': 'artist studios',
       'classes': 'workshops',
       'public exhibitions': 'exhibitions',
       'arts programming': 'cultural programming',
@@ -1057,7 +1056,6 @@
     };
 
     function mergeTag(tag) {
-      // Resolve chains safely
       let t = tag;
       const seen = new Set();
       while (TAG_MERGE[t] && !seen.has(t)) {
@@ -1068,7 +1066,6 @@
     }
 
     // Overly generic tags that link almost everyone — omit from the graph
-    // (Note: removed "visual art" so the newly consolidated core visual art node can appear)
     const SKIP_TAGS = new Set([
       'community arts',
       'community',
@@ -1082,7 +1079,9 @@
       'cultural events',
       'events',
       'participation',
-      'talks'
+      'talks',
+      'emerging artists',
+      'artists and organisations'
     ]);
 
     function decodeEntities(txt) {
@@ -1445,7 +1444,6 @@
 
       // Apply network highlighting
       function applyHighlight(litNodeIds, litEdgeIds, primaryEdgeId) {
-        // Update nodes
         const nodeUpdates = nodesDS.get().map(n => {
           const isLit = litNodeIds.has(n.id);
           return {
@@ -1456,7 +1454,6 @@
         });
         nodesDS.update(nodeUpdates);
 
-        // Update edges
         const edgeUpdates = edgesDS.get().map(e => {
           if (primaryEdgeId && e.id === primaryEdgeId) {
             return {
@@ -1557,7 +1554,6 @@
             setActiveListItem(params.nodes[0]);
             highlightNodePath(params.nodes[0], 2);
           } else if (params.edges.length > 0) {
-            // LINK CLICKED:
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
             if (!clickedEdge) return;
@@ -1568,7 +1564,6 @@
             const litNodeIds = new Set([endpointA, endpointB]);
             const litEdgeIds = new Set([clickedEdgeId]);
 
-            // Scan all edges touching endpointA or endpointB
             edgesDS.get().forEach(e => {
               const touchesA = (e.from === endpointA || e.to === endpointA);
               const touchesB = (e.from === endpointB || e.to === endpointB);
@@ -1582,7 +1577,6 @@
             setActiveListItem(null);
             applyHighlight(litNodeIds, litEdgeIds, clickedEdgeId);
           } else {
-            // Background clicked: Reset
             setActiveListItem(null);
             resetHighlight();
           }
