@@ -62,8 +62,9 @@
     .page-header {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 36px 24px 12px;
+      padding: 40px 24px 16px;
     }
+
 
     .page-header .eyebrow {
       display: inline-flex;
@@ -83,26 +84,27 @@
     .page-header .eyebrow i { font-size: 0.7rem; opacity: 0.9; }
 
     .page-header h1 {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
       font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-      font-size: clamp(1.75rem, 3.5vw, 2.35rem);
+      font-size: clamp(1.8rem, 3.6vw, 2.45rem);
       font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
       color: var(--ink);
     }
 
     .page-header p {
       margin: 0;
-      max-width: 62ch;
-      font-size: 1rem;
+      max-width: 68ch;
+      font-size: 1.02rem;
       color: var(--ink-muted);
-      line-height: 1.6;
+      line-height: 1.65;
     }
     .page-header p strong {
       color: var(--ink);
       font-weight: 600;
     }
+
 
     #visnet-root {
       max-width: 1200px;
@@ -144,23 +146,24 @@
 
     .visnet-container {
       width: 100%;
-      aspect-ratio: 16/10;
-      max-height: 720px;
-      min-height: 480px;
+      aspect-ratio: 16/11;
+      max-height: 780px;
+      min-height: 520px;
       position: relative;
       background-color: var(--bg);
       background-image:
-        radial-gradient(circle at 50% 45%, rgba(255,255,255,0.95) 0%, transparent 70%),
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,0.97) 0%, transparent 68%),
         linear-gradient(var(--grid) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 100% 100%, 36px 36px, 36px 36px;
+      background-size: 100% 100%, 40px 40px, 40px 40px;
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       opacity: 0;
-      animation: visnetFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: visnetFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
+
 
     .visnet-container:fullscreen,
     .visnet-container:-webkit-full-screen {
@@ -501,11 +504,13 @@
     <p class="eyebrow"><i class="fas fa-palette" aria-hidden="true"></i> Westmeath Creative Community</p>
     <h1>Arts &amp; Creative Network</h1>
     <p>
-      Explore how artists, organisations, venues and skills connect across the county.
-      <strong>Click a node</strong> to see its circle; use search or the legend to find someone.
+      A living map of how artists, organisations, venues and skills connect across the county —
+      more like a flower than a tight circle, so every practice has room to breathe.
+      <strong>Click a node</strong> to open its neighbourhood; search or use the legend to find someone.
       Click empty space to reset.
     </p>
   </div>
+
 
   <div id="visnet-root">
     <div class="visnet-controls">
@@ -549,8 +554,10 @@
   </div>
 
   <footer class="page-footer">
-    Built for the Westmeath creative community · Share connections, find collaborators, grow together
+    Built for the Westmeath creative community · Share connections, find collaborators, grow together<br />
+    <span style="opacity:0.75">Athlone Art Gallery · The Village at Burgess · and friends across the county</span>
   </footer>
+
 
   <script>
   (function () {
@@ -575,14 +582,17 @@
       { name: "Anne-Marie O'Sullivan", about: "theatre, writing, puppetry, storytelling, site-specific theatre, digital theatre, directing, producing", contact: "Anne-Marie O'Sullivan", kind: "person" },
       { name: "Mimi Seery", about: "visual art, public art, community arts", contact: "Mimi Seery", kind: "person" },
       { name: "Patsy Preston", about: "visual art, sculpture, installation art, event décor, community arts, murals, sign writing, natural dyes, eco art", contact: "Patsy Preston", kind: "person" },
-      { name: "Athlone Arts Gallery", about: "visual art, gallery, exhibitions, arts", contact: "Rosie Boles", kind: "person" },
+      { name: "Athlone Art Gallery", about: "visual art, gallery, exhibitions, established and emerging artists, community arts", contact: "Rosie Boles · The Village at Burgess", kind: "person" },
+
       { name: "Simon Geraghty", about: "writing, literature", contact: "Simon Geraghty", kind: "person" },
       { name: "Trea Ivory", about: "visual art, illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
       { name: "Sarah Rohan", about: "dance, dance teaching, choreography, performance", contact: "Sarah Rohan", kind: "person" },
       { name: "Tadhg Kelleher", about: "music, art, history, heritage, events", contact: "Tadhg Kelleher", kind: "person" },
 
       // Venues / spaces / organisations
+      { name: "The Village at Burgess, Athlone", about: "visual art, gallery, exhibitions, established and emerging artists, craft, community arts, cultural events", contact: "Rosie Boles", kind: "venue" },
       { name: "Luan Gallery", about: "contemporary visual art, exhibitions, workshops, talks, multidisciplinary cultural activity", contact: "", kind: "venue" },
+
       { name: "Abbey Road Artists' Studios", about: "artist studios, visual art, creative workspace, exhibitions, workshops, community arts", contact: "", kind: "venue" },
       { name: "Abbey Road Community Space", about: "exhibitions, workshops, classes, talks, community and creative projects", contact: "", kind: "venue" },
       { name: "Chimera Gallery", about: "visual art, gallery, exhibitions", contact: "", kind: "venue" },
@@ -654,28 +664,29 @@
       'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Fast-settling physics (high damping, low velocities, quick stabilisation)
+    // Flower-like spread: longer springs, softer centre pull, stronger repulsion
     const CALM_PHYSICS = {
       enabled: true,
       solver: 'forceAtlas2Based',
       forceAtlas2Based: {
-        gravitationalConstant: -32,
-        centralGravity: 0.015,
-        springLength: 140,
-        springConstant: 0.07,
-        damping: 0.97,
-        avoidOverlap: 0.85
+        gravitationalConstant: -55,
+        centralGravity: 0.004,
+        springLength: 220,
+        springConstant: 0.045,
+        damping: 0.95,
+        avoidOverlap: 1.15
       },
-      minVelocity: 2.5,
-      maxVelocity: 10,
-      timestep: 0.45,
+      minVelocity: 1.8,
+      maxVelocity: 12,
+      timestep: 0.4,
       stabilization: {
         enabled: true,
-        iterations: 280,
-        updateInterval: 25,
+        iterations: 420,
+        updateInterval: 30,
         fit: true
       }
     };
+
 
     function getSector(tag) {
       const t = tag.toLowerCase();
@@ -829,13 +840,17 @@
         const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
         const typeLabel = item.kind === 'person' ? 'Artist / Organisation' : 'Venue / Space';
         const contactLine = item.contact ? `\nContact: ${item.contact}` : '';
-        const title = `${item.name}\n[${typeLabel}]${contactLine}\n\n${item.about}`;
+        const skillsLine = item.about
+          ? '\n\nSkills & focus:\n' + item.about.split(',').map(s => '· ' + s.trim()).join('\n')
+          : '';
+        const title = `${item.name}\n[${typeLabel}]${contactLine}${skillsLine}`;
 
         addNode(eid, item.name, item.kind, color, {
           title,
           contact: item.contact || '',
           about: item.about
         });
+
 
         const tags = item.about.split(',')
           .map(t => mergeTag(normTag(t)))
@@ -863,14 +878,15 @@
         });
       });
 
-      // 2. Size & mass by connectivity
+      // 2. Size & mass by connectivity (slightly larger nodes)
       nodes.forEach(n => {
-        const base = n.nodeType === 'tag' ? 12 : 18;
-        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 7 : 10);
-        n.size = Math.min(n.nodeType === 'tag' ? 36 : 52, size);
+        const base = n.nodeType === 'tag' ? 16 : 24;
+        const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 8 : 12);
+        n.size = Math.min(n.nodeType === 'tag' ? 44 : 64, size);
         n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 2.5 : 1.5;
       });
+
 
       // Legend
       const legend = {
@@ -970,16 +986,18 @@
 
           let fontSize, padding;
           if (n.nodeType === 'tag') {
-            padding = 28;
-            fontSize = fs ? (isExport ? 18 : 15) : 11;
+            padding = 38;
+            fontSize = fs ? (isExport ? 20 : 17) : 13;
           } else if (n.edgeCount <= 2) {
-            padding = 36;
-            fontSize = fs ? (isExport ? 20 : 16) : 12;
+            padding = 50;
+            fontSize = fs ? (isExport ? 22 : 18) : 14;
           } else {
-            padding = 48;
-            const base = fs ? (isExport ? 22 : 18) : 13;
-            fontSize = Math.max(fs ? (isExport ? 18 : 15) : 12, base + (16 * ((n.size - 18) / 34)));
+            padding = 62;
+            const base = fs ? (isExport ? 24 : 20) : 15;
+            fontSize = Math.max(fs ? (isExport ? 20 : 17) : 14, base + (16 * ((n.size - 24) / 40)));
           }
+
+
 
           if (!textCache[id] || textCache[id].fontSize !== fontSize) {
             let txt = n.externalLabel.length > 42
@@ -1149,8 +1167,10 @@
         });
 
         network.once('stabilizationIterationsDone', () => {
-          network.setOptions({ physics: { enabled: true } });
+          // Freeze layout so the graph no longer rotates or drifts
+          network.setOptions({ physics: { enabled: false } });
         });
+
 
         network.once('afterDrawing', () => {
           if (spinner) spinner.style.display = 'none';
