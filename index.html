@@ -711,7 +711,6 @@
       .page-header h1 { font-size: 1.55rem; }
     }
   </style>
-  </style>
 </head>
 <body>
   <div class="site-banner">
@@ -728,7 +727,6 @@
       Click empty space to reset.
     </p>
   </div>
-
 
   <div id="visnet-root">
     <div class="visnet-controls">
@@ -791,12 +789,10 @@
     <div class="visnet-stats" id="visnet-stats"></div>
   </div>
 
-
   <footer class="page-footer">
     Built for the Westmeath creative community · Share connections, find collaborators, grow together<br />
     <span style="opacity:0.75">Athlone Art Gallery · The Village at Burgess · and friends across the county</span>
   </footer>
-
 
   <script>
   (function () {
@@ -809,7 +805,6 @@
       // People — individuals; orgs/venues use kind: "venue"
       { name: "Gateway Youth Project UBU", about: "youth, education", contact: "Shelly Dunican", kind: "venue" },
       { name: "Barbara – Art Box", about: "children's art, mixed media, DIY", contact: "Barbara", kind: "person" },
-
       { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
       { name: "Katherine Knott Walsh", about: "craft, crochet, painting, drawing, weaving, spinning", contact: "Katherine Knott Walsh", kind: "person" },
       { name: "Aoife Doolan", about: "writing, music, gardening, inclusion", contact: "Aoife Doolan", kind: "person" },
@@ -823,7 +818,6 @@
       { name: "Mimi Seery", about: "public art", contact: "Mimi Seery", kind: "person" },
       { name: "Patsy Preston", about: "sculpture, installation art, murals, sign writing, natural dyes, eco art, event décor", contact: "Patsy Preston", kind: "person" },
       { name: "Athlone Art Gallery", about: "gallery, emerging artists", contact: "Rosie Boles · The Village at Burgess", kind: "venue" },
-
       { name: "Simon Geraghty", about: "writing, literature", contact: "Simon Geraghty", kind: "person" },
       { name: "Trea Ivory", about: "illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
       { name: "Sarah Rohan", about: "dance, choreography", contact: "Sarah Rohan", kind: "person" },
@@ -873,7 +867,7 @@
       { name: "Westmeath libraries", about: "literature, writing", contact: "", kind: "venue" }
     ];
 
-    // Colour palette – people & venues stay distinct; tags get unique colours by sector
+    // Colour palette
     const COLORS = {
       person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
       venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
@@ -898,7 +892,6 @@
       'Other':               { background: '#90A4AE', border: '#607D8B' }
     };
 
-    // Flower-like spread: longer springs, softer centre pull, stronger repulsion
     const CALM_PHYSICS = {
       enabled: true,
       solver: 'forceAtlas2Based',
@@ -921,22 +914,22 @@
       }
     };
 
-
     function getSector(tag) {
       const t = tag.toLowerCase();
-      if (/visual art|painting|oil painting|drawing|illustration|gallery|exhibitions|public art|installation|murals|sign writing|cyanotype|2d animation|contemporary visual|mixed media|children.?s art|eco art|natural dyes|artist studio|creative workspace|atrium|sculpture/.test(t)) return 'Visual Art';
-      if (/craft|crochet|weaving|spinning|willow|textiles|metalwork|pewter|dry stone|letter carving|stone carving|diy|irish-made|irish craft/.test(t)) return 'Craft & Making';
-      if (/theatre|drama|puppetry|storytelling|directing|producing|site-specific|digital theatre|comedy|performance(?! dance)|stage management|mc/.test(t)) return 'Performing Arts';
-      if (/music|recording|song|traditional music|sound engineering|comhaltas|music generation|music production|residential recording/.test(t)) return 'Music';
-      if (/writing|literature|poetry|spoken word|storytelling/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
+      // RegEx updated to gracefully map newly consolidated nodes to proper color groups
+      if (/visual art|painting|drawing|illustration|animation|gallery|exhibition|public art|installation|mural|signwriting|cyanotype|mixed media|children.?s art|eco art|natural.*art/.test(t)) return 'Visual Art';
+      if (/craft|crochet|weaving|spinning|textile|metalwork|pewter|stone|diy|irish-made/.test(t)) return 'Craft & Making';
+      if (/theatre|drama|puppetry|storytelling|directing|producing|comedy|performance|stage management|mc/.test(t)) return 'Performing Arts';
+      if (/music|recording|song|sound engineering|comhaltas/.test(t)) return 'Music';
+      if (/writing|literature|poetry|spoken word/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
       if (/community|education|youth|workshops|classes|talks|inclusion|participation|artist support|funding|policy|cultural programming|creative development|creativity|administration/.test(t)) return 'Community & Education';
-      if (/heritage|museum|castle|history|military|interpretation|local history|collections|barracks|belvedere|moate|athlone castle/.test(t)) return 'Heritage & Museums';
-      if (/radio|broadcast|media|social media|sound engineering/.test(t)) return 'Media & Broadcast';
-      if (/festival|events|event promotion|event décor|culture night|cultural events|cultural activity/.test(t)) return 'Events & Festivals';
-      if (/dance|choreography|dance teaching|céilí/.test(t)) return 'Dance';
+      if (/heritage|museum|castle|history|military|interpretation|collections|barracks|belvedere|moate/.test(t)) return 'Heritage & Museums';
+      if (/radio|broadcast|media/.test(t)) return 'Media & Broadcast';
+      if (/festival|events|event management|culture night/.test(t)) return 'Events & Festivals';
+      if (/dance|choreography|céilí/.test(t)) return 'Dance';
       if (/film|cinema|screen/.test(t)) return 'Film & Screen';
-      if (/outdoor|gardens|public art|waterfront|cultural quarter|architecture/.test(t)) return 'Public & Outdoor';
-      if (/enterprise|creative businesses|incubation|arts development|westmeath arts|westmeath culture|creative ireland/.test(t)) return 'Enterprise & Admin';
+      if (/outdoor|garden|horticulture|waterfront|cultural quarter|architecture/.test(t)) return 'Public & Outdoor';
+      if (/enterprise|business|arts development|westmeath arts|social media/.test(t)) return 'Enterprise & Admin';
       return 'Other';
     }
 
@@ -944,9 +937,109 @@
       return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
-    // Merge only true near-duplicates / synonym phrases (keep distinct practices)
+    // Merge only true near-duplicates / synonym phrases (keep distinct practices separate)
     const TAG_MERGE = {
-      // Community – same idea, different wording
+      // Visual Art
+      'oil painting': 'painting',
+      'contemporary visual art': 'visual art',
+      'art gallery': 'gallery',
+      'natural dyes': 'natural / eco art',
+      'eco art': 'natural / eco art',
+      'illustration': 'illustration / animation',
+      '2d animation': 'illustration / animation',
+      'sign writing': 'signwriting',
+      'art': 'visual art',
+      'arts': 'visual art',
+      'multidisciplinary arts': 'visual art',
+
+      // Craft
+      'weaving': 'textiles',
+      'spinning': 'textiles',
+      'willow weaving': 'textiles',
+      'stone carving': 'stonework / stone carving',
+      'letter carving': 'stonework / stone carving',
+      'dry stone walling': 'stonework / stone carving',
+      'irish craft': 'craft',
+      'traditional craft': 'craft',
+      'irish-made work': 'craft',
+      'craft production': 'craft',
+
+      // Theatre & Performance
+      'site-specific theatre': 'theatre',
+      'digital theatre': 'theatre',
+      'community theatres': 'theatre',
+      'local community theatres': 'theatre',
+      'drama': 'theatre',
+      'public programming': 'performance',
+
+      // Literature & Words
+      'literature': 'writing',
+      'spoken word': 'poetry',
+
+      // Music
+      'traditional music': 'music',
+      'community music': 'music',
+      'youth music': 'music education',
+      'recording': 'recording / music production',
+      'music production': 'recording / music production',
+      'residential recording': 'recording / music production',
+
+      // Dance
+      'choreography': 'dance',
+      'dance teaching': 'dance',
+
+      // Festivals & Events
+      'arts festivals': 'festivals',
+      'arts/music festivals': 'festivals',
+      'mullingar arts/music festivals': 'festivals',
+      'culture night': 'festivals',
+      'culture night - westmeath venues': 'festivals',
+      'athlone arts & heritage festivals': 'festivals',
+      'event décor': 'event management',
+      'stage management': 'event management',
+      'outdoor events': 'event management',
+      'community and cultural events': 'cultural events',
+      'community events': 'cultural events',
+      'cultural activity': 'cultural events',
+      'multidisciplinary cultural activity': 'cultural events',
+      'outdoor cultural activity': 'event management',
+      'outdoor cultural events': 'event management',
+
+      // Heritage
+      'military heritage': 'heritage',
+      'broadcasting heritage': 'heritage',
+      'local history': 'heritage',
+      'history': 'heritage',
+      'cultural heritage': 'heritage',
+
+      // Media & Broadcast
+      'radio': 'radio / broadcasting',
+      'broadcasting': 'radio / broadcasting',
+      'broadcasting history': 'radio / broadcasting',
+      'radio heritage': 'radio / broadcasting',
+      'athlone/moydrum transmission history': 'radio / broadcasting',
+
+      // Film & Cinema
+      'film': 'film / cinema',
+      'cinema': 'film / cinema',
+      'film clubs': 'film / cinema',
+      'local film clubs': 'film / cinema',
+
+      // Enterprise, Education & Spaces
+      'creative businesses': 'creative development',
+      'arts development': 'creative development',
+      'youth': 'youth arts / youth',
+      'gardening': 'gardens / horticulture',
+      'gardens': 'gardens / horticulture',
+      'artist studio': 'artist studios',
+      'creative studios': 'artist studios',
+      'creative workspace': 'artist studios',
+      'classes': 'workshops',
+      'public exhibitions': 'exhibitions',
+      'arts programming': 'cultural programming',
+      'photography community': 'photography',
+
+      // Community
       'community': 'community arts',
       'community activity': 'community arts',
       'community and creative projects': 'community arts',
@@ -957,62 +1050,14 @@
       'local cultural activity': 'community arts',
       'local culture': 'community arts',
       'culture': 'community arts',
-      'community and cultural events': 'cultural events',
-      'community events': 'cultural events',
-      // Cultural events – same idea
-      'cultural activity': 'cultural events',
-      'multidisciplinary cultural activity': 'cultural events',
-      'outdoor cultural activity': 'outdoor events',
-      'outdoor cultural events': 'outdoor events',
-      // Visual art – only generic synonyms
-      'art': 'visual art',
-      'arts': 'visual art',
-      'contemporary visual art': 'visual art',
-      'multidisciplinary arts': 'visual art',
-      // Exhibitions
-      'public exhibitions': 'exhibitions',
-      // Heritage
-      'history': 'heritage',
-      'local history': 'heritage',
-      'cultural heritage': 'heritage',
-      'military heritage': 'heritage',
-      // Workshops
-      'classes': 'workshops',
-      // Music – only clear synonyms
-      'community music': 'music',
-      'youth music': 'music',
-      // Theatre
-      'drama': 'theatre',
-      // Studios
-      'artist studio': 'artist studios',
-      'creative studios': 'artist studios',
-      'creative workspace': 'artist studios',
-      // Programming
-      'arts programming': 'cultural programming',
-      'public programming': 'cultural programming',
-      // Broadcast
-      'broadcasting history': 'broadcasting',
-      'radio heritage': 'broadcasting',
-      'athlone/moydrum transmission history': 'broadcasting',
-      // Photography
-      'photography community': 'photography',
-      // Craft – synonym phrasings only
-      'traditional craft': 'craft',
-      'irish craft': 'craft',
-      'irish-made work': 'craft',
-      'craft production': 'craft',
-      // Misc synonyms
+
+      // Misc
       'artists': 'artists and organisations',
-      'established and emerging artists': 'artists and organisations',
-      // Light tidy-ups that were clearly the same thing twice
-      'oil painting': 'painting',
-      'willow weaving': 'weaving',
-      'dance teaching': 'dance',
-      'residential recording': 'recording'
+      'established and emerging artists': 'artists and organisations'
     };
 
     function mergeTag(tag) {
-      // Resolve chains (e.g. willow weaving → textiles) safely
+      // Resolve chains safely
       let t = tag;
       const seen = new Set();
       while (TAG_MERGE[t] && !seen.has(t)) {
@@ -1023,14 +1068,13 @@
     }
 
     // Overly generic tags that link almost everyone — omit from the graph
+    // (Note: removed "visual art" so the newly consolidated core visual art node can appear)
     const SKIP_TAGS = new Set([
       'community arts',
       'community',
       'community space',
       'community media',
       'culture',
-      // Too many people/venues share these as filler descriptors
-      'visual art',
       'art',
       'arts',
       'exhibitions',
@@ -1040,10 +1084,6 @@
       'participation',
       'talks'
     ]);
-
-
-
-
 
     function decodeEntities(txt) {
       return String(txt || '')
@@ -1122,11 +1162,10 @@
           about: item.about
         });
 
-
         const tags = item.about.split(',')
           .map(t => mergeTag(normTag(t)))
           .filter(t => t && !SKIP_TAGS.has(t));
-        // Deduplicate after merge (same entity may map to same canonical tag twice)
+        // Deduplicate after merge
         const uniqueTags = [...new Set(tags)];
 
         entityTagMap[eid] = [];
@@ -1150,7 +1189,7 @@
         });
       });
 
-      // 2. Size & mass by connectivity (larger nodes)
+      // 2. Size & mass by connectivity
       nodes.forEach(n => {
         const base = n.nodeType === 'tag' ? 22 : 32;
         const size = base + Math.log(1 + n.edgeCount) * (n.nodeType === 'tag' ? 10 : 14);
@@ -1158,8 +1197,6 @@
         n.mass = Math.max(1, n.edgeCount * (n.nodeType === 'tag' ? 0.6 : 1.1));
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 3 : 2;
       });
-
-
 
       // Legend
       const legend = {
@@ -1205,7 +1242,7 @@
 
       let network, nodesDS, edgesDS;
       let textCache = {};
-      let searchIndex = []; // { id, label, type, color }
+      let searchIndex = [];
       let nodeListTypeFilter = 'all';
       let activeNodeId = null;
 
@@ -1250,7 +1287,6 @@
           });
         });
       }
-
 
       function showError(msg) {
         if (!spinner) return;
@@ -1314,9 +1350,6 @@
             fontSize = Math.max(fs ? (isExport ? 24 : 20) : 17, base + (18 * ((n.size - 32) / 48)));
           }
 
-
-
-
           if (!textCache[id] || textCache[id].fontSize !== fontSize) {
             let txt = n.externalLabel.length > 42
               ? n.externalLabel.substring(0, 39) + '…'
@@ -1328,8 +1361,6 @@
             let cur = '';
             ctx.font = `${fontSize}px Inter, sans-serif`;
             const wrap = fs ? 170 : 120;
-
-
 
             for (let i = 0; i < words.length; i++) {
               if (ctx.measureText(cur + words[i] + ' ').width > wrap && i > 0) {
@@ -1467,7 +1498,6 @@
         renderNodeList();
 
         network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
-
           physics: CALM_PHYSICS,
           nodes: {
             shape: 'dot',
@@ -1492,7 +1522,6 @@
           // Freeze layout so the graph no longer rotates or drifts
           network.setOptions({ physics: { enabled: false } });
         });
-
 
         network.once('afterDrawing', () => {
           if (spinner) spinner.style.display = 'none';
@@ -1529,7 +1558,6 @@
             highlightNodePath(params.nodes[0], 2);
           } else if (params.edges.length > 0) {
             // LINK CLICKED:
-            // Light up its connected nodes, PLUS all other nodes that connect to them!
             const clickedEdgeId = params.edges[0];
             const clickedEdge = edgesDS.get(clickedEdgeId);
             if (!clickedEdge) return;
@@ -1560,7 +1588,6 @@
           }
         });
 
-
         setupListeners();
       }
 
@@ -1575,9 +1602,6 @@
         highlightNodePath(id, 2);
         network.selectNodes([id]);
       }
-
-
-
 
       function runSearch(query, listEl, isLegend) {
         const q = (query || '').trim().toLowerCase();
@@ -1883,7 +1907,6 @@
           });
         });
       }
-
 
       // Start
       try {
