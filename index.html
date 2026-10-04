@@ -892,9 +892,9 @@
       return s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
     }
 
-    // Merge near-duplicate skill labels into a single canonical tag
+    // Merge only true near-duplicates / synonym phrases (keep distinct practices)
     const TAG_MERGE = {
-      // Community family
+      // Community – same idea, different wording
       'community': 'community arts',
       'community activity': 'community arts',
       'community and creative projects': 'community arts',
@@ -905,145 +905,59 @@
       'local cultural activity': 'community arts',
       'local culture': 'community arts',
       'culture': 'community arts',
-      'participation': 'community arts',
-      'inclusion': 'community arts',
-      'community space': 'community arts',
-      'irish cultural education and participation': 'community arts',
-      'irish culture': 'traditional culture',
-      'traditional culture': 'traditional culture',
-      // Events family
       'community and cultural events': 'cultural events',
       'community events': 'cultural events',
+      // Cultural events – same idea
       'cultural activity': 'cultural events',
       'multidisciplinary cultural activity': 'cultural events',
       'outdoor cultural activity': 'outdoor events',
       'outdoor cultural events': 'outdoor events',
-      'events': 'cultural events',
-      'event promotion': 'festivals',
-      'event décor': 'festivals',
-      // Visual art family
+      // Visual art – only generic synonyms
       'art': 'visual art',
       'arts': 'visual art',
       'contemporary visual art': 'visual art',
       'multidisciplinary arts': 'visual art',
-      'eco art': 'visual art',
-      'children\'s art': 'visual art',
-      'children’s art': 'visual art',
-      'mixed media': 'visual art',
-      'public art': 'visual art',
-      'installation art': 'visual art',
-      'murals': 'visual art',
-      'illustration': 'visual art',
-      'drawing': 'visual art',
-      '2d animation': 'visual art',
-      'traditional arts': 'visual art',
-      // Painting
-      'oil painting': 'painting',
-      // Exhibitions / gallery
+      // Exhibitions
       'public exhibitions': 'exhibitions',
-      'gallery': 'exhibitions',
-      // Heritage / history
+      // Heritage
       'history': 'heritage',
       'local history': 'heritage',
       'cultural heritage': 'heritage',
       'military heritage': 'heritage',
-      'museum': 'heritage',
-      'collections': 'heritage',
-      'interpretation': 'heritage',
-      'architecture': 'heritage',
-      'gardens': 'heritage',
-      // Workshops / classes / education
+      // Workshops
       'classes': 'workshops',
-      'talks': 'workshops',
-      'education': 'workshops',
-      'music education': 'workshops',
-      // Music family
+      // Music – only clear synonyms
       'community music': 'music',
       'youth music': 'music',
-      'traditional music': 'music',
-      'song': 'music',
-      'music production': 'music',
-      'recording': 'music',
-      'residential recording': 'music',
-      'international music industry': 'music',
-      'sound engineering': 'music',
-      // Performance / theatre
+      // Theatre
       'drama': 'theatre',
-      'digital theatre': 'theatre',
-      'site-specific theatre': 'theatre',
-      'comedy': 'theatre',
-      'puppetry': 'theatre',
-      'storytelling': 'theatre',
-      'directing': 'theatre',
-      'producing': 'theatre',
-      'stage management': 'theatre',
-      'mc': 'performance',
-      'performance': 'performance',
-      // Dance
-      'dance teaching': 'dance',
-      'choreography': 'dance',
-      'céilí': 'dance',
       // Studios
       'artist studio': 'artist studios',
       'creative studios': 'artist studios',
       'creative workspace': 'artist studios',
-      // Programming / admin
+      // Programming
       'arts programming': 'cultural programming',
       'public programming': 'cultural programming',
-      'arts development': 'cultural programming',
-      'artist support': 'cultural programming',
-      'funding': 'cultural programming',
-      'policy': 'cultural programming',
-      'administration': 'cultural programming',
-      'creative development': 'cultural programming',
-      'creativity': 'cultural programming',
-      'enterprise': 'cultural programming',
-      'creative businesses': 'cultural programming',
-      'cultural venues': 'cultural programming',
-      // Broadcast / media
+      // Broadcast
       'broadcasting history': 'broadcasting',
       'radio heritage': 'broadcasting',
       'athlone/moydrum transmission history': 'broadcasting',
-      'radio': 'broadcasting',
-      'community media': 'broadcasting',
-      'media': 'broadcasting',
-      'social media': 'broadcasting',
       // Photography
       'photography community': 'photography',
-      // Craft
+      // Craft – synonym phrasings only
       'traditional craft': 'craft',
       'irish craft': 'craft',
       'irish-made work': 'craft',
       'craft production': 'craft',
-      'metalwork': 'craft',
-      'diy': 'craft',
-      'natural dyes': 'craft',
-      'sign writing': 'craft',
-      'letter carving': 'craft',
-      'stone carving': 'sculpture',
-      'dry stone walling': 'craft',
-      // Textiles / making
-      'willow weaving': 'textiles',
-      'weaving': 'textiles',
-      'spinning': 'textiles',
-      'crochet': 'textiles',
-
-      // Literature
-      'spoken word': 'poetry',
-      'writing': 'literature',
-      'literature': 'literature',
-      // Film
-      'cinema': 'film',
-      'screen culture': 'film',
-      // Misc
+      // Misc synonyms
       'artists': 'artists and organisations',
       'established and emerging artists': 'artists and organisations',
-      'youth': 'community arts',
-      'gardening': 'community arts',
-      'cyanotype': 'visual art'
+      // Light tidy-ups that were clearly the same thing twice
+      'oil painting': 'painting',
+      'willow weaving': 'weaving',
+      'dance teaching': 'dance',
+      'residential recording': 'recording'
     };
-
-
 
     function mergeTag(tag) {
       // Resolve chains (e.g. willow weaving → textiles) safely
