@@ -1010,6 +1010,25 @@
       return t;
     }
 
+    // Overly generic tags that link almost everyone — omit from the graph
+    const SKIP_TAGS = new Set([
+      'community arts',
+      'community',
+      'culture',
+      // Too many people/venues share these as filler descriptors
+      'visual art',
+      'art',
+      'arts',
+      'exhibitions',
+      'workshops',
+      'cultural events',
+      'events',
+      'participation',
+      'talks'
+    ]);
+
+
+
 
     function decodeEntities(txt) {
       return String(txt || '')
@@ -1091,9 +1110,10 @@
 
         const tags = item.about.split(',')
           .map(t => mergeTag(normTag(t)))
-          .filter(Boolean);
+          .filter(t => t && !SKIP_TAGS.has(t));
         // Deduplicate after merge (same entity may map to same canonical tag twice)
         const uniqueTags = [...new Set(tags)];
+
         entityTagMap[eid] = [];
 
         uniqueTags.forEach(tag => {
