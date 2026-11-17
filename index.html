@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Westmeath Arts &amp; Creative Network</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23FF6F61'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" />
   <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
@@ -162,9 +163,9 @@
     }
 
     .visnet-nodelist {
-      flex: 0 0 310px;
-      width: 310px;
-      max-width: 310px;
+      flex: 0 0 360px;
+      width: 360px;
+      max-width: 360px;
       display: flex;
       flex-direction: column;
       background: var(--surface-solid);
@@ -219,19 +220,20 @@
 
     .visnet-nodelist-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 2px;
-      padding: 10px 12px 0;
+      padding: 8px 10px 0;
       border-bottom: 1px solid var(--border);
       background: rgba(255, 253, 250, 0.8);
     }
     .visnet-nodelist-tab {
-      flex: 1;
-      padding: 9px 4px 11px;
-      font-size: 10.5px;
+      flex: 1 1 30%;
+      padding: 8px 4px 10px;
+      font-size: 10px;
       font-weight: 650;
       font-family: inherit;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       color: var(--ink-faint);
       background: transparent;
       border: none;
@@ -340,6 +342,11 @@
       font-weight: 500;
     }
     .page-footer a:hover { text-decoration: underline; }
+
+    .visnet-canvas {
+      position: absolute;
+      inset: 0;
+    }
 
     .visnet-container {
       width: 100%;
@@ -714,14 +721,14 @@
 </head>
 <body>
   <div class="site-banner">
-    <span>Mapping the creative life of the county · Artists, venues &amp; skills across Westmeath</span>
+    <span>Mapping the creative life of the county · People, organisations, venues, events &amp; skills across Westmeath</span>
   </div>
 
   <div class="page-header">
     <p class="eyebrow"><i class="fas fa-palette" aria-hidden="true"></i> Westmeath Creative Community</p>
     <h1>Arts &amp; Creative Network</h1>
     <p>
-      A living map of how artists, organisations, venues and skills connect across the county —
+      A living map of how people, organisations, venues, events and skills connect across the county —
       more like a flower than a tight circle, so every practice has room to breathe.
       <strong>Click a node</strong> to open its neighbourhood; search or use the legend to find someone.
       Click empty space to reset.
@@ -731,7 +738,7 @@
   <div id="visnet-root">
     <div class="visnet-controls">
       <div class="visnet-search-wrap">
-        <input type="search" class="visnet-search-input" placeholder="Search people, venues, skills…" aria-label="Search network" autocomplete="off" disabled />
+        <input type="search" class="visnet-search-input" placeholder="Search people, orgs, venues, events…" aria-label="Search network" autocomplete="off" disabled />
         <ul class="visnet-search-results" role="listbox"></ul>
       </div>
       <button type="button" class="visnet-fit-btn visnet-btn" disabled>
@@ -750,6 +757,7 @@
     <div class="visnet-main-layout">
       <div class="visnet-graph-wrap">
         <div class="visnet-container" role="img" aria-label="Westmeath arts and creative network graph">
+          <div class="visnet-canvas"></div>
           <div class="visnet-loading-spinner">
             <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Building network…
           </div>
@@ -779,7 +787,9 @@
         <div class="visnet-nodelist-tabs" role="tablist">
           <button type="button" class="visnet-nodelist-tab active" data-filter="all" role="tab">All</button>
           <button type="button" class="visnet-nodelist-tab" data-filter="Person" role="tab">People</button>
+          <button type="button" class="visnet-nodelist-tab" data-filter="Organisation" role="tab">Orgs</button>
           <button type="button" class="visnet-nodelist-tab" data-filter="Venue" role="tab">Venues</button>
+          <button type="button" class="visnet-nodelist-tab" data-filter="Event" role="tab">Events</button>
           <button type="button" class="visnet-nodelist-tab" data-filter="Skill" role="tab">Skills</button>
         </div>
         <div class="visnet-nodelist-body" role="listbox"></div>
@@ -794,85 +804,40 @@
     <span style="opacity:0.75">Athlone Art Gallery · The Village at Burgess · and friends across the county</span>
   </footer>
 
+  <script src="data/network.js"></script>
   <script>
   (function () {
     'use strict';
 
     // ====================================================================
-    // DATA – people, organisations & venues with tags
+    // DATA – loaded from data/network.js (works from file://, no fetch)
     // ====================================================================
-    const RAW = [
-      // People — individuals; orgs/venues use kind: "venue"
-      { name: "Gateway Youth Project UBU", about: "youth, education", contact: "Shelly Dunican", kind: "venue" },
-      { name: "Barbara – Art Box", about: "children's art, mixed media, DIY", contact: "Barbara", kind: "person" },
-      { name: "Lorcán Dunne", about: "sculpture, stone carving, letter carving, dry stone walling, craft", contact: "Lorcán Dunne", kind: "person" },
-      { name: "Katherine Knott Walsh", about: "craft, crochet, painting, drawing, weaving, spinning", contact: "Katherine Knott Walsh", kind: "person" },
-      { name: "Aoife Doolan", about: "writing, music, gardening, inclusion", contact: "Aoife Doolan", kind: "person" },
-      { name: "Philomena Murphy", about: "radio, broadcasting, sound engineering, poetry, music", contact: "Philomena Murphy", kind: "person" },
-      { name: "Clare Daly Madden", about: "painting, cyanotype, crochet, willow weaving, textiles", contact: "Clare Daly Madden", kind: "person" },
-      { name: "Anna Boles", about: "painting", contact: "Anna Boles", kind: "person" },
-      { name: "Sinéad Byrne Canning", about: "spoken word, poetry, MC, stage management, festivals", contact: "Sinéad Byrne Canning", kind: "person" },
-      { name: "Emily O'Callaghan", about: "festivals, administration, social media", contact: "Emily O'Callaghan", kind: "person" },
-      { name: "Avril Egan", about: "painting, oil painting", contact: "Avril Egan", kind: "person" },
-      { name: "Anne-Marie O'Sullivan", about: "theatre, writing, puppetry, storytelling, site-specific theatre, digital theatre, directing, producing", contact: "Anne-Marie O'Sullivan", kind: "person" },
-      { name: "Mimi Seery", about: "public art", contact: "Mimi Seery", kind: "person" },
-      { name: "Patsy Preston", about: "sculpture, installation art, murals, sign writing, natural dyes, eco art, event décor", contact: "Patsy Preston", kind: "person" },
-      { name: "Athlone Art Gallery", about: "gallery, emerging artists", contact: "Rosie Boles · The Village at Burgess", kind: "venue" },
-      { name: "Simon Geraghty", about: "writing, literature", contact: "Simon Geraghty", kind: "person" },
-      { name: "Trea Ivory", about: "illustration, traditional arts, 2D animation", contact: "Trea Ivory", kind: "person" },
-      { name: "Sarah Rohan", about: "dance, choreography", contact: "Sarah Rohan", kind: "person" },
-      { name: "Tadhg Kelleher", about: "music, heritage", contact: "Tadhg Kelleher", kind: "person" },
+    const RAW = window.CREATIVE_LINKS_DATA;
 
-      // Venues / spaces / organisations — one clear role each
-      { name: "The Village at Burgess, Athlone", about: "gallery, craft, emerging artists", contact: "Rosie Boles", kind: "venue" },
-      { name: "Luan Gallery", about: "gallery, contemporary visual art", contact: "", kind: "venue" },
-      { name: "Abbey Road Artists' Studios", about: "artist studios", contact: "", kind: "venue" },
-      { name: "Abbey Road Community Space", about: "creative workspace", contact: "", kind: "venue" },
-      { name: "Chimera Gallery", about: "gallery", contact: "", kind: "venue" },
-      { name: "The Bastion Gallery", about: "gallery", contact: "", kind: "venue" },
-      { name: "Purple Raven Art Gallery", about: "gallery, craft", contact: "", kind: "venue" },
-      { name: "Glasson Craft Gallery", about: "gallery, craft", contact: "", kind: "venue" },
-      { name: "The Atrium – Civic Centre Athlone", about: "public programming", contact: "", kind: "venue" },
-      { name: "The Atrium – County Buildings Mullingar", about: "public programming", contact: "", kind: "venue" },
-      { name: "Cúige Studios", about: "artist studios, creative businesses", contact: "", kind: "venue" },
-      { name: "Devine Art Studios", about: "artist studios, painting, craft", contact: "", kind: "venue" },
-      { name: "Grouse Lodge Recording Studios", about: "recording, music production", contact: "", kind: "venue" },
-      { name: "Áras an Mhuilinn", about: "traditional music, song, dance", contact: "", kind: "venue" },
-      { name: "Dún na Sí Heritage Centre", about: "traditional music, dance, heritage, céilí, outdoor events", contact: "", kind: "venue" },
-      { name: "Mullingar Arts Centre", about: "theatre, music, dance, performance", contact: "", kind: "venue" },
-      { name: "Dean Crowe Theatre & Arts Centre", about: "theatre, music, dance, comedy, performance", contact: "", kind: "venue" },
-      { name: "Tuar Ard Arts & Enterprise Centre", about: "theatre, gallery, enterprise, outdoor events, festivals", contact: "", kind: "venue" },
-      { name: "Athlone Little Theatre", about: "theatre, performance", contact: "", kind: "venue" },
-      { name: "Mullingar Pewter", about: "craft, metalwork", contact: "", kind: "venue" },
-      { name: "Athlone Photography Club", about: "photography", contact: "", kind: "venue" },
-      { name: "Music Generation Westmeath", about: "music, music education, youth music", contact: "", kind: "venue" },
-      { name: "Westmeath Arts Office", about: "arts development, funding, cultural programming, artist support", contact: "", kind: "venue" },
-      { name: "Westmeath Culture", about: "creative development, cultural programming", contact: "", kind: "venue" },
-      { name: "Creative Ireland Westmeath", about: "creative development", contact: "", kind: "venue" },
-      { name: "Athlone Castle", about: "heritage, interpretation", contact: "", kind: "venue" },
-      { name: "Moate Museum", about: "heritage", contact: "", kind: "venue" },
-      { name: "Belvedere House & Gardens", about: "heritage, architecture, gardens, outdoor events", contact: "", kind: "venue" },
-      { name: "Mullingar Museum", about: "heritage, education", contact: "", kind: "venue" },
-      { name: "Mullingar Barracks", about: "heritage, military heritage", contact: "", kind: "venue" },
-      { name: "Athlone Community Radio", about: "radio, broadcasting, music", contact: "", kind: "venue" },
-      { name: "RTÉ / Athlone broadcasting heritage", about: "broadcasting, radio", contact: "", kind: "venue" },
-      { name: "Comhaltas centres – Westmeath", about: "traditional music, song, dance", contact: "", kind: "venue" },
-      { name: "Athlone Arts & Heritage Festivals", about: "festivals, heritage, music, performance", contact: "", kind: "venue" },
-      { name: "Culture Night – Westmeath venues", about: "festivals, music, performance, heritage", contact: "", kind: "venue" },
-      { name: "Mullingar arts/music festivals", about: "festivals, music, performance", contact: "", kind: "venue" },
-      { name: "Music at Mearescourt", about: "music, performance", contact: "", kind: "venue" },
-      { name: "Athlone Shannon Waterfront / Cultural Quarter", about: "public art, festivals, performance, heritage, outdoor events", contact: "", kind: "venue" },
-      { name: "Local community theatres – Westmeath", about: "theatre, performance", contact: "", kind: "venue" },
-      { name: "Local film clubs – Westmeath", about: "film, cinema", contact: "", kind: "venue" },
-      { name: "Westmeath libraries", about: "literature, writing", contact: "", kind: "venue" }
-    ];
-
-    // Colour palette
+    // Colour palette — entity kinds, then edges
     const COLORS = {
-      person:  { background: '#FF6F61', border: '#D32F2F' },   // coral
-      venue:   { background: '#5C6BC0', border: '#3949AB' },   // indigo
-      edge:    'rgba(144, 164, 174, 0.42)'
+      person:       { background: '#FF6F61', border: '#D32F2F' }, // coral
+      organisation: { background: '#148F77', border: '#0E6B59' }, // teal
+      venue:        { background: '#5C6BC0', border: '#3949AB' }, // indigo
+      event:        { background: '#C9842A', border: '#8F5E16' }, // copper
+      edge:         'rgba(144, 164, 174, 0.42)'
     };
+
+    // Labels used by the legend, directory, tooltips and poster
+    const KINDS = {
+      person:       { color: COLORS.person,       label: 'Person',       list: 'Person' },
+      organisation: { color: COLORS.organisation, label: 'Organisation', list: 'Organisation' },
+      venue:        { color: COLORS.venue,        label: 'Venue',        list: 'Venue' },
+      event:        { color: COLORS.event,        label: 'Event',        list: 'Event' }
+    };
+
+    function kindInfo(kind) {
+      return KINDS[kind] || {
+        color: { background: '#90A4AE', border: '#607D8B' },
+        label: 'Entry',
+        list: 'Entry'
+      };
+    }
 
     // Sector → colour
     const SECTOR_COLORS = {
@@ -916,14 +881,14 @@
 
     function getSector(tag) {
       const t = tag.toLowerCase();
-      if (/visual art|painting|drawing|illustration|animation|gallery|exhibition|public art|installation|mural|signwriting|cyanotype|mixed media|children.?s art|eco art|natural.*art|sculpture|photograph|studio/.test(t)) return 'Visual Art';
-      if (/craft|crochet|weaving|spinning|textile|metalwork|pewter|stone|diy|irish-made/.test(t)) return 'Craft & Making';
+      if (/visual art|painting|drawing|illustration|animation|gallery|exhibition|public art|installation|mural|signwriting|cyanotype|mixed media|children.?s art|eco art|natural.*art|sculpture|photograph|studio|traditional arts/.test(t)) return 'Visual Art';
+      if (/craft|crochet|weaving|spinning|textile|metalwork|pewter|stone|diy|irish-made|ceramic|costume/.test(t)) return 'Craft & Making';
       if (/theatre|drama|puppetry|storytelling|directing|producing|comedy|performance|mc/.test(t)) return 'Performing Arts';
-      if (/music|recording|song|sound engineering|comhaltas/.test(t)) return 'Music';
+      if (/music|recording|song|sound engineering|comhaltas|samba/.test(t)) return 'Music';
       if (/writing|literature|poetry|spoken word/.test(t) && !/theatre|puppet/.test(t)) return 'Literature & Words';
       if (/community|education|youth|workshops|classes|talks|inclusion|participation|artist support|funding|policy|cultural programming|creative development|creativity|administration/.test(t)) return 'Community & Education';
       if (/heritage|museum|castle|history|military|interpretation|collections|barracks|belvedere|moate/.test(t)) return 'Heritage & Museums';
-      if (/radio|broadcast|media/.test(t)) return 'Media & Broadcast';
+      if (/radio|broadcast/.test(t) || (/\bmedia\b/.test(t) && !/social media/.test(t))) return 'Media & Broadcast';
       if (/festival|events|event management|culture night/.test(t)) return 'Events & Festivals';
       if (/dance|choreography|céilí/.test(t)) return 'Dance';
       if (/film|cinema|screen/.test(t)) return 'Film & Screen';
@@ -1147,21 +1112,23 @@
       // 1. Create entity nodes + extract tags
       RAW.forEach((item, idx) => {
         const eid = 'ent_' + idx;
-        const color = item.kind === 'person' ? COLORS.person : COLORS.venue;
-        const typeLabel = item.kind === 'person' ? 'Artist / Organisation' : 'Venue / Space';
+        const kind = kindInfo(item.kind);
+        const color = kind.color;
+        const typeLabel = kind.label;
         const contactLine = item.contact ? `\nContact: ${item.contact}` : '';
-        const skillsLine = item.about
-          ? '\n\nSkills & focus:\n' + item.about.split(',').map(s => '· ' + s.trim()).join('\n')
+        const about = item.about || '';
+        const skillsLine = about
+          ? '\n\nSkills & focus:\n' + about.split(',').map(s => '· ' + s.trim()).join('\n')
           : '';
         const title = `${item.name}\n[${typeLabel}]${contactLine}${skillsLine}`;
 
         addNode(eid, item.name, item.kind, color, {
           title,
           contact: item.contact || '',
-          about: item.about
+          about
         });
 
-        const tags = item.about.split(',')
+        const tags = about.split(',')
           .map(t => mergeTag(normTag(t)))
           .filter(t => t && !SKIP_TAGS.has(t));
         // Deduplicate after merge
@@ -1197,25 +1164,31 @@
         if (n.nodeType !== 'tag') n.borderWidth = n.edgeCount > 6 ? 3 : 2;
       });
 
-      // Legend
-      const legend = {
-        'Artist / Organisation': COLORS.person.background,
-        'Venue / Space': COLORS.venue.background
-      };
+      // Legend — entry kinds, then only the skill sectors that appear
       const sectorOrder = [
         'Visual Art', 'Craft & Making', 'Performing Arts', 'Music', 'Dance',
         'Literature & Words', 'Community & Education', 'Heritage & Museums',
         'Media & Broadcast', 'Events & Festivals', 'Film & Screen',
         'Public & Outdoor', 'Enterprise & Admin', 'Other'
       ];
-      sectorOrder.forEach(s => {
-        if (usedSectors.has(s)) legend[s] = SECTOR_COLORS[s].background;
-      });
+      const legendGroups = [
+        {
+          title: 'Entries',
+          items: ['person', 'organisation', 'venue', 'event'].map(k => [KINDS[k].label, KINDS[k].color.background])
+        },
+        {
+          title: 'Skills',
+          items: sectorOrder.filter(s => usedSectors.has(s)).map(s => [s, SECTOR_COLORS[s].background])
+        }
+      ];
 
-      return { nodes, edges, legend, stats: {
+      const countKind = (kind) => RAW.filter(r => r.kind === kind).length;
+      return { nodes, edges, legendGroups, stats: {
         entities: RAW.length,
-        people: RAW.filter(r => r.kind === 'person').length,
-        venues: RAW.filter(r => r.kind === 'venue').length,
+        people: countKind('person'),
+        organisations: countKind('organisation'),
+        venues: countKind('venue'),
+        events: countKind('event'),
         tags: Object.keys(tagIdMap).length,
         connections: edges.length
       }};
@@ -1228,7 +1201,8 @@
       const root = document.getElementById('visnet-root');
       if (!root) return;
 
-      const container   = root.querySelector('.visnet-container');
+      const frame       = root.querySelector('.visnet-container');
+      const container   = root.querySelector('.visnet-canvas');
       const spinner     = root.querySelector('.visnet-loading-spinner');
       const legendEl    = root.querySelector('.visnet-legend');
       const fsControls  = root.querySelector('.visnet-fullscreen-controls');
@@ -1489,7 +1463,7 @@
         searchIndex = data.nodes.map(n => ({
           id: n.id,
           label: n.externalLabel || n.label || n.id,
-          type: n.nodeType === 'tag' ? 'Skill' : (n.nodeType === 'person' ? 'Person' : 'Venue'),
+          type: n.nodeType === 'tag' ? 'Skill' : kindInfo(n.nodeType).list,
           color: (n.originalColor && n.originalColor.background) || (n.color && n.color.background) || '#90A4AE'
         })).sort((a, b) => a.label.localeCompare(b.label));
         renderNodeList();
@@ -1526,16 +1500,19 @@
         });
 
         // Legend + embedded search
-        if (data.legend && legendEl) {
+        if (data.legendGroups && legendEl) {
           let html = '<input type="search" class="visnet-legend-search" placeholder="Search…" aria-label="Search in legend" autocomplete="off" />';
           html += '<ul class="visnet-legend-hits"></ul>';
-          html += '<div class="legend-title">Legend</div>';
-          for (const [type, color] of Object.entries(data.legend)) {
-            html += `<div class="visnet-legend-item">
-                       <span class="visnet-legend-color" style="background:${color}"></span>
-                       <span>${type}</span>
-                     </div>`;
-          }
+          data.legendGroups.forEach(group => {
+            if (!group.items.length) return;
+            html += `<div class="legend-title">${group.title}</div>`;
+            group.items.forEach(([type, color]) => {
+              html += `<div class="visnet-legend-item">
+                         <span class="visnet-legend-color" style="background:${color}"></span>
+                         <span>${type}</span>
+                       </div>`;
+            });
+          });
           legendEl.innerHTML = html;
           legendEl.style.display = 'block';
         }
@@ -1543,7 +1520,7 @@
         // Stats
         if (statsEl && data.stats) {
           const s = data.stats;
-          statsEl.textContent = `${s.people} artists/orgs  ·  ${s.venues} venues/spaces  ·  ${s.tags} skills  ·  ${s.connections} connections`;
+          statsEl.textContent = `${s.people} people  ·  ${s.organisations} organisations  ·  ${s.venues} venues  ·  ${s.events} events  ·  ${s.tags} skills  ·  ${s.connections} connections`;
         }
 
         network.on('afterDrawing', ctx => drawLabels(ctx, network, nodesDS, false));
@@ -1662,8 +1639,9 @@
           const px = DPI / 25.4;
           const posterW = Math.round(A1_W * px);
           const posterH = Math.round(A1_H * px);
+          const footerH = Math.round(26 * px);
           const graphY = 0;
-          const graphH = posterH;
+          const graphH = posterH - footerH;
 
           const positions = network.getPositions();
           let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -1778,16 +1756,46 @@
           // Graph
           ctx.drawImage(graphCanvas, 0, graphY, posterW, graphH);
 
+          // Footer: title plus the four entry colours
+          ctx.fillStyle = '#faf7f3';
+          ctx.fillRect(0, graphH, posterW, footerH);
+          ctx.strokeStyle = 'rgba(15,23,42,0.1)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, graphH);
+          ctx.lineTo(posterW, graphH);
+          ctx.stroke();
+
+          ctx.fillStyle = '#1a1512';
+          ctx.font = '600 42px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Westmeath Arts & Creative Network', posterW / 2, graphH + footerH * 0.32);
+
+          const legendItems = ['person', 'organisation', 'venue', 'event']
+            .map(k => [KINDS[k].label, KINDS[k].color.background]);
+          ctx.font = '500 36px Inter, sans-serif';
+          const dotR = 16;
+          const itemGap = 72;
+          const itemWidths = legendItems.map(([label]) => dotR * 2 + 18 + ctx.measureText(label).width);
+          const rowW = itemWidths.reduce((sum, w) => sum + w, 0) + itemGap * (legendItems.length - 1);
+          let legendX = (posterW - rowW) / 2;
+          const legendY = graphH + footerH * 0.72;
+          legendItems.forEach(([label, color], i) => {
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.arc(legendX + dotR, legendY, dotR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1a1512';
+            ctx.textAlign = 'left';
+            ctx.fillText(label, legendX + dotR * 2 + 18, legendY);
+            legendX += itemWidths[i] + itemGap;
+          });
+
           // Frame
           ctx.strokeStyle = 'rgba(15,23,42,0.18)';
           ctx.lineWidth = 4;
           ctx.strokeRect(2, 2, posterW - 4, posterH - 4);
-
-          // Footer caption
-          ctx.fillStyle = 'rgba(15,23,42,0.45)';
-          ctx.font = '28px Inter, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('Westmeath Arts & Creative Network', posterW / 2, posterH - 36);
 
           if (isPDF) {
             const { jsPDF } = window.jspdf;
@@ -1837,9 +1845,9 @@
 
         root.querySelector('.visnet-fullscreen-btn')?.addEventListener('click', () => {
           if (!isFullscreen()) {
-            container.requestFullscreen?.() ||
-            container.webkitRequestFullscreen?.() ||
-            container.msRequestFullscreen?.();
+            frame.requestFullscreen?.() ||
+            frame.webkitRequestFullscreen?.() ||
+            frame.msRequestFullscreen?.();
           }
         });
 
@@ -1906,6 +1914,10 @@
       try {
         if (typeof vis === 'undefined') {
           showError('vis-network library failed to load.');
+          return;
+        }
+        if (!Array.isArray(RAW) || !RAW.length) {
+          showError('Network data failed to load.');
           return;
         }
         const data = buildGraph();
